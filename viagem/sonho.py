@@ -416,7 +416,7 @@ class Sonho(Viagem):
         for q, (k, texto, _) in enumerate(self.vozes):
             tv = self.t_vozes[q]
             a = 0.72 * janela(t, tv - 0.8, tv - 0.2, tv + 1.1, tv + 1.7)
-            if a <= 0 or vz[q] <= 0:
+            if a <= 0 or vz[q] <= 0 or not (0 <= vx[q] <= self.W and 0 <= vy[q] <= self.H):
                 continue
             sp = self.sprite(texto, 'spectral-300i', 25, (200, 205, 220), largura=520)
             x, y = vx[q] + 16 * S, vy[q] - 14 * S

@@ -733,12 +733,16 @@ class Viagem:
         elif ancora == 'dir':
             x -= img.width - 2 * m
         x, y = int(round(x - m)), int(round(y - m))
+        # só o pedaço que cai dentro da tela (o resto quebrava o recorte)
+        x0, y0 = max(0, x), max(0, y)
+        dentro = (x0 - x, y0 - y, min(img.width, base.width - x), min(img.height, base.height - y))
+        if dentro[2] <= dentro[0] or dentro[3] <= dentro[1]:
+            return None
         if alfa < 0.999:
             a = np.asarray(img.getchannel('A'), np.float32) * alfa
             img = img.copy()
             img.putalpha(Image.fromarray(a.astype(np.uint8)))
-        base.alpha_composite(img, (max(0, x), max(0, y)),
-                             (max(0, -x), max(0, -y)))
+        base.alpha_composite(img, (x0, y0), dentro)
         return (x + m, y + m, x + img.width - m, y + img.height - m)
 
     def trecho(self, texto, n=46):
