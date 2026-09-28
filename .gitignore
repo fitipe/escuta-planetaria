@@ -28,3 +28,10 @@ aluno/*.pt
 aluno/*.log
 arquivo/conferencia_embeddings.txt
 rubrica/lotes/
+
+# viagem/: o vídeo, a trilha e os quadros se reconstroem com viagem.py; as
+# fontes vêm do Google Fonts na primeira vez
+viagem/*.mp4
+viagem/*.wav
+viagem/*.png
+viagem/fontes/
