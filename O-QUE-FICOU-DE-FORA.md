@@ -104,3 +104,52 @@ as reconhece.
 **Tudo que está em `rubrica/pendente-v3.3.md`** — o quarto quadrante da carga, o
 `estranha`, os valores que faltam no `despertar`, a recorrência de figura, as
 espécies de atribuição, o jogo do bicho, o celebratório.
+
+---
+
+## No Latente (o jogo, 28/09)
+
+O Latente (`latente/`) não lê o banco: parte do que o planeta V2 publica e
+escolhe dali as suas vozes. É uma colagem — as palavras saem do contexto e se
+emendam com as de outra pessoa —, por isso o crivo é mais duro que o do
+planeta. **Nada disto vale para o planeta.** Números de `latente/preparar.py`.
+
+**O céu: tudo o que o planeta mostra (444.498).** Fora ficam o `cuidado.json`
+(3.065), as cópias escondidas (103) e a camada de propaganda.
+→ **Correto.**
+
+**As vozes: 47.532 de ~250 mil que passam no crivo.** Amostra com semente fixa:
+34 mil literais (os que abrem contando o sonho pesam o dobro) e 13,5 mil
+desejos (os 36 mais próximos de cada desejo da noite, mais 7 mil ao acaso).
+→ Corte por **tamanho de download** (7 MB), não por conteúdo. Pode crescer.
+
+**Tamanho: literal com menos de 45 caracteres, desejo com menos de 30, e tudo
+acima de 1.500 (66.591 somados).** Os longos que ficam entram até 900
+caracteres, cortados no fim de uma frase.
+→ O curto ("pesadelo") não tem o que emendar: não serve à colagem. Os longos
+voltam se o teto de download subir.
+
+**Idioma: 4.708** que não parecem português (os subs em inglês, sobretudo).
+→ Correto para o jogo: a emenda precisa da mesma língua.
+
+**O crivo: 29.094 relatos (~10% dos candidatos).** Sai o relato inteiro com
+sexo explícito (e gíria dele), xingamento e ofensa, violência sexual e **ideação** (`IDEACAO`:
+desejo ou alívio perto de morrer/sumir, "me mata", "dormir pra sempre", "pular
+da ponte"). O `IDEACAO` pega também hipérbole ("o calor tá me matando") e
+pesadelos em que alguém mata quem sonha — de propósito: na colagem, o "queria"
+de uma pessoa e o "me matar" de outra viram uma frase. Nos desejos, sai também
+morte, violência, doença e política. **Pesadelo de morte, perseguição, zumbi e
+guerra fica**: é sonho.
+→ Correto para o jogo. Em tempo de jogo, uma vigia no `motor.js` ainda impede
+que uma emenda forme vontade + morte.
+
+**Os desejos da noite: 206 escolhidos a mão** entre ~900 candidatos
+(`latente/desejos.txt`). Saíram os que dependem do post a que respondiam, os que
+nomeiam pessoa privada, os agressivos, os sexuais, os de corpo e peso, e todo
+desejo de sumir, morrer ou se ferir, mesmo dito como piada.
+→ Critério escrito no próprio arquivo.
+
+**Achado de passagem, para o cuidado:** o `IDEACAO` casa com 5.587 relatos do
+planeta, e **3.984 não estão no `cuidado.json`**. Muitos são hipérbole ou
+pesadelo, mas não todos, e o planeta os mostra.
+→ **Rodar como sonda**, no fluxo das bandeiras.

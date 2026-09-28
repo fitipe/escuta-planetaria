@@ -1,0 +1,4 @@
+# Arquivo em construção, sem indexação: os relatos são públicos em suas fontes,
+# mas reuni-los e torná-los buscáveis é outro gesto — e este ainda é um teste.
+User-agent: *
+Disallow: /

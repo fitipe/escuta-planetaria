@@ -1,0 +1,1542 @@
+<!doctype html>
+<title>Latente</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Um jogo que sonha sozinho, uma palavra de cada vez, com os sonhos públicos da Escuta Planetária.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,200;0,300;0,400;1,200;1,300&family=IBM+Plex+Mono:wght@300;400&display=swap">
+<style>
+  /* Latente — um mundo só, a noite: não há tema claro, de propósito.
+     A paleta é a da Escuta Planetária: azul = sonho dormido (literal),
+     âmbar = desejo (figurado). */
+  :root{
+    color-scheme:dark;
+    --noite:#05060b; --painel:rgba(7,9,16,.9); --linha:#1c2132; --linha2:#2c3350;
+    --tinta:#e2e5ef; --tinta2:#b6bbcc; --fraco:#747a92; --apagado:#4a4f66;
+    --sonho:#6ba8ff; --sonho-a:#d3e2ff; --sonho-b:#a8c5ff;
+    --desejo:#ffbe5c; --desejo-a:#ffe3b3; --desejo-b:#ffcd80;
+    --profundo:#6b73e0; --vigilia:#ffae97;
+    --serifa:Spectral,"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --topo:env(safe-area-inset-top,0px); --base:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--noite);color:var(--tinta);overflow:hidden;
+    font:400 12.5px/1.5 var(--mono);-webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;touch-action:none;-webkit-tap-highlight-color:transparent}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  button:focus-visible,input:focus-visible,a:focus-visible{outline:1px solid var(--sonho);outline-offset:3px}
+  [hidden]{display:none!important}
+  a{color:var(--sonho)}
+
+  #ceu{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair;z-index:0}
+  /* véus: o fundo do sono (índigo) e a borda da vigília (pêssego) sobem conforme a agulha */
+  .veu{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0}
+  #veuFundo{background:radial-gradient(ellipse at 50% 45%,transparent 30%,rgba(22,24,70,.85) 100%)}
+  #veuVigilia{background:radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(255,176,150,.28) 100%)}
+  #veuAurora{background:linear-gradient(to top,rgba(122,74,92,.55),rgba(52,38,70,.25) 45%,transparent 75%)}
+  #clarao{position:fixed;inset:0;pointer-events:none;z-index:9;background:#fff;opacity:0}
+
+  /* ——— abertura ——— */
+  #abertura{position:fixed;inset:0;z-index:6;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;
+    background:linear-gradient(90deg,rgba(5,6,11,.92) 0,rgba(5,6,11,.7) 42%,rgba(5,6,11,0) 75%);
+    padding:calc(var(--topo) + clamp(28px,7vh,80px)) 16px calc(var(--base) + 32px) clamp(16px,7vw,96px);
+    transition:opacity .9s ease}
+  #abertura.sumindo{opacity:0;pointer-events:none}
+  #abertura .col{max-width:34rem;display:flex;flex-direction:column;gap:22px}
+  #abertura h1{font:italic 200 clamp(56px,11vw,112px)/.9 var(--serifa);margin:0;letter-spacing:-.01em}
+  #abertura .sub{font:400 11px/1.5 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--fraco);margin:-8px 0 0}
+  #abertura .intro{font:300 clamp(18px,2.1vw,21px)/1.55 var(--serifa);color:var(--tinta);margin:0;text-wrap:pretty}
+  #abertura .estat{font:400 11px/1.6 var(--mono);color:var(--fraco);margin:0}
+  .acoes{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .primario{font:italic 300 21px/1 var(--serifa);padding:14px 22px 15px;border:1px solid var(--linha2);border-radius:2px;
+    background:rgba(107,168,255,.07);color:var(--tinta);transition:border-color .2s,background .2s}
+  .primario:hover:not(:disabled){border-color:var(--sonho);background:rgba(107,168,255,.14)}
+  .primario:disabled{color:var(--fraco);cursor:progress}
+  .secundario{font:400 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--tinta2);
+    padding:10px 2px;border-bottom:1px solid var(--linha2)}
+  .secundario:hover{color:var(--tinta);border-color:var(--tinta2)}
+  #abertura .dicas{font:400 11.5px/1.7 var(--mono);color:var(--fraco);margin:0;max-width:44ch}
+  #manifesto{border-top:1px solid var(--linha);padding-top:18px;display:flex;flex-direction:column;gap:12px}
+  #manifesto h2{font:italic 200 30px/1.1 var(--serifa);margin:0}
+  #manifesto p{font:300 16.5px/1.55 var(--serifa);color:var(--tinta2);margin:0;max-width:60ch}
+  #manifesto p b{font-weight:400;color:var(--tinta)}
+  #epigrafe{margin:6px 0 0;padding-top:18px;border-top:1px solid var(--linha);font:italic 300 16px/1.5 var(--serifa);color:var(--tinta2)}
+  #epigrafe cite{display:block;font:normal 400 10.5px/1.6 var(--mono);color:var(--fraco);margin-top:4px;font-style:normal}
+  #aberturaLingua{position:fixed;z-index:7;top:calc(var(--topo) + 16px);right:16px}
+  .lingua{font:400 11px/1 var(--mono);letter-spacing:.12em;color:var(--fraco);padding:8px 6px}
+  .lingua b{color:var(--tinta);font-weight:400}
+
+  /* ——— durante a noite ——— */
+  #hud{position:fixed;inset:0;z-index:4;pointer-events:none}
+  #hud button,#hud input,#hud .toque{pointer-events:auto}
+  #barra{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;
+    gap:12px;padding:calc(var(--topo) + 14px) 16px 0;font:400 11px/1.4 var(--mono);color:var(--fraco)}
+  #marca{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+  #marca b{font:italic 300 17px/1 var(--serifa);color:var(--tinta);letter-spacing:.01em}
+  #relogio{font-variant-numeric:tabular-nums}
+  #botoes{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  #botoes button{padding:7px 9px;border:1px solid transparent;border-radius:2px;letter-spacing:.08em;color:var(--tinta2)}
+  #botoes button:hover{border-color:var(--linha2);color:var(--tinta)}
+  #botoes button[aria-pressed="true"]{color:var(--tinta);border-color:var(--linha2)}
+  #bAcordar{color:var(--vigilia)!important}
+  #noiteLinha{position:absolute;top:0;left:0;height:1px;width:100%;background:var(--linha)}
+  #noiteLinha i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--sonho),var(--vigilia))}
+
+  #desejo{position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--topo) + 58px);
+    width:min(640px,calc(100vw - 32px));text-align:center}
+  #desejoRot{font:400 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--desejo);opacity:.8;
+    display:flex;justify-content:center;gap:10px;align-items:center}
+  #perto{display:inline-block;width:64px;height:2px;background:rgba(255,190,92,.18);position:relative}
+  #perto i{position:absolute;inset:0 auto 0 0;width:0;background:var(--desejo);transition:width .6s}
+  #desejoTxt{margin:9px 0 0;font:italic 300 clamp(16px,2vw,20px)/1.45 var(--serifa);color:var(--desejo-a);text-wrap:balance}
+  #desejoTxt span{transition:filter 1.2s,opacity 1.2s}
+  #desejoTxt .oculta{filter:blur(5px);opacity:.55}
+
+  #instrumento{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--base) + 128px);
+    width:min(820px,calc(100vw - 32px));display:flex;justify-content:space-between;align-items:center;gap:14px 26px;
+    flex-wrap:wrap;font:400 10.5px/1 var(--mono);color:var(--fraco);letter-spacing:.06em}
+  #temp{display:flex;align-items:center;gap:9px}
+  #temp label{text-transform:uppercase;letter-spacing:.16em}
+  #tempVal{color:var(--tinta);font-variant-numeric:tabular-nums;min-width:3.2ch}
+  #tempIn{width:120px;accent-color:var(--sonho);height:18px;margin:0}
+  #tempAuto{padding:5px 7px;border:1px solid var(--linha2);border-radius:2px;letter-spacing:.12em}
+  #tempAuto[aria-pressed="true"]{color:var(--tinta);border-color:var(--sonho)}
+  #agulha{display:flex;align-items:center;gap:10px;flex:1 1 260px;max-width:400px;text-transform:uppercase;letter-spacing:.14em}
+  #agulha .trilho{position:relative;flex:1;height:14px}
+  #agulha .trilho::before{content:"";position:absolute;left:0;right:0;top:6.5px;height:1px;
+    background:linear-gradient(90deg,var(--profundo),var(--linha2) 30%,var(--linha2) 70%,var(--vigilia))}
+  #agulha .rem{position:absolute;left:30%;right:30%;top:4px;height:6px;border-radius:3px;background:rgba(107,168,255,.12)}
+  #agulha .rem::after{content:attr(data-rot);position:absolute;left:50%;top:-14px;transform:translateX(-50%);
+    font-size:9px;letter-spacing:.2em;color:var(--sonho);opacity:.75}
+  #ponteiro{position:absolute;top:0;width:2px;height:14px;margin-left:-1px;left:50%;background:var(--tinta);
+    box-shadow:0 0 10px rgba(226,229,239,.7)}
+  #agulha .z{white-space:nowrap}
+  #agulha .z.perigo{color:var(--tinta)}
+
+  #fala{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--base) + 18px);
+    width:min(820px,calc(100vw - 32px));height:calc(3 * 1.5em + 6px);overflow:hidden;
+    font:300 clamp(17px,2.05vw,23px)/1.5 var(--serifa);color:var(--tinta);
+    -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 48%);mask-image:linear-gradient(to bottom,transparent 0,#000 48%)}
+  #falaFundo{position:absolute;left:0;right:0;bottom:0;height:calc(var(--base) + 230px);
+    background:linear-gradient(to top,rgba(5,6,11,.92),rgba(5,6,11,.6) 55%,transparent)}
+  #falaIn{position:absolute;left:0;right:0;bottom:0}
+  .pal{transition:opacity .35s,text-shadow 1.4s;border-radius:2px}
+  .pal.lit.a{color:var(--sonho-a)} .pal.lit.b{color:var(--sonho-b)}
+  .pal.des.a{color:var(--desejo-a)} .pal.des.b{color:var(--desejo-b)}
+  .pal.emenda::before{content:"";display:inline-block;width:1px;height:.72em;margin-right:4px;vertical-align:-.04em;
+    background:currentColor;opacity:.38}
+  .pal.nova{text-shadow:0 0 14px currentColor}
+  .pal.oculta{opacity:0}
+  .pal:hover{background:rgba(255,255,255,.06);cursor:help}
+  .sep{color:var(--apagado)}
+  .reticencias{color:var(--fraco);letter-spacing:.3em}
+
+  /* ——— no céu ——— */
+  #rotulos{position:fixed;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+  .cand{position:absolute;left:0;top:0;pointer-events:auto;white-space:nowrap;padding:4px 6px 4px 12px;
+    font:italic 300 16px/1.1 var(--serifa);text-shadow:0 0 10px #05060b,0 0 4px #05060b;opacity:0;
+    transition:opacity .16s;will-change:transform}
+  .cand::before{content:"";position:absolute;left:0;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+    border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+  .cand small{display:block;font:normal 400 9px/1.3 var(--mono);opacity:.6;letter-spacing:.06em}
+  .cand.lit{color:#c8dbff} .cand.des{color:#ffd9a0} .cand.corte{color:#9aa0b8}
+  .cand:hover,.cand:focus-visible{outline:none;text-shadow:0 0 12px currentColor,0 0 4px #05060b}
+  .cand.escolhida{transition:opacity .5s}
+  .voa{position:fixed;left:0;top:0;z-index:5;pointer-events:none;white-space:nowrap;
+    font:300 clamp(17px,2.05vw,23px)/1.5 var(--serifa);transition:transform .52s cubic-bezier(.2,.75,.2,1),opacity .52s;
+    text-shadow:0 0 14px currentColor}
+  #alvo{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none}
+  #alvo i{position:absolute;left:-11px;top:-11px;width:22px;height:22px;border:1px solid var(--desejo);border-radius:50%;
+    box-shadow:0 0 16px rgba(255,190,92,.45);animation:pulso 2.6s ease-in-out infinite}
+  #alvo span{position:absolute;left:16px;top:-7px;font:400 9.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+    color:var(--desejo);white-space:nowrap}
+  #alvo.esq span{left:auto;right:16px}
+  #alvo.borda{pointer-events:auto;cursor:pointer}
+  #alvo.borda i{border-style:dashed;animation:none}
+  #alvo b{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-top:1px solid var(--desejo);
+    border-right:1px solid var(--desejo);display:none}
+  #alvo.borda b{display:block}
+  @keyframes pulso{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.55}}
+  #foco{position:absolute;left:0;top:0;width:128px;height:128px;margin:-64px 0 0 -64px;border-radius:50%;
+    border:1px solid rgba(226,229,239,.4);box-shadow:0 0 30px rgba(107,168,255,.2) inset;opacity:0;transition:opacity .25s}
+  #foco.on{opacity:1}
+
+  #aviso{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);z-index:5;pointer-events:none;text-align:center;
+    width:min(560px,calc(100vw - 32px));opacity:0;transition:opacity .7s}
+  #aviso.on{opacity:1}
+  #aviso .t1{font:italic 200 clamp(30px,5vw,46px)/1.1 var(--serifa);color:var(--tinta)}
+  #aviso .t2{margin-top:10px;font:400 10.5px/1.6 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--fraco)}
+  #aviso .t3{margin-top:14px;font:italic 300 19px/1.5 var(--serifa);color:var(--desejo-a)}
+
+  /* ——— diário ——— */
+  #diario{position:fixed;inset:0;z-index:6;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;
+    padding:calc(var(--topo) + 40px) 16px calc(var(--base) + 40px);background:rgba(5,6,11,.55)}
+  #diario .folha{max-width:640px;margin:0 auto;background:var(--painel);border:1px solid var(--linha);border-radius:3px;
+    padding:clamp(20px,4vw,38px);display:flex;flex-direction:column;gap:22px;backdrop-filter:blur(6px)}
+  #diario .quando{font:400 10.5px/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--fraco);margin:0}
+  #diario h2{font:italic 200 clamp(34px,6vw,50px)/1.1 var(--serifa);margin:6px 0 0;text-wrap:balance}
+  #diario h3{font:400 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--fraco);margin:0 0 10px}
+  #lembro{font:300 19px/1.6 var(--serifa);color:var(--tinta);margin:0;text-wrap:pretty}
+  #lembro .frag{color:var(--tinta2);font-style:italic}
+  #desejoFim{font:italic 300 20px/1.5 var(--serifa);color:var(--desejo-a);margin:0}
+  #desejoFim cite{display:block;margin-top:6px;font:normal 400 10.5px/1.6 var(--mono);color:var(--fraco)}
+  #numeros{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:0}
+  #numeros div{border-top:1px solid var(--linha);padding-top:8px}
+  #numeros dt{font:400 9.5px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fraco)}
+  #numeros dd{margin:4px 0 0;font:300 24px/1.1 var(--serifa);font-variant-numeric:tabular-nums}
+  #inteiro{font:300 16.5px/1.65 var(--serifa);max-height:46vh;overflow-y:auto;padding-right:8px;margin:0;
+    border-top:1px solid var(--linha);padding-top:14px}
+  #inteiroBox .nota{font:400 10.5px/1.6 var(--mono);color:var(--fraco);margin:0 0 12px}
+  #diario .acoes{justify-content:space-between}
+  #contagem{font:400 10.5px/1.5 var(--mono);color:var(--fraco)}
+  #contagem button{border-bottom:1px solid var(--linha2);color:var(--tinta2);margin-left:6px}
+
+  /* ——— de onde veio uma palavra ——— */
+  #ficha{position:fixed;z-index:8;right:16px;bottom:calc(var(--base) + 150px);width:min(380px,calc(100vw - 32px));
+    max-height:min(60vh,520px);display:flex;flex-direction:column;gap:10px;background:var(--painel);
+    border:1px solid var(--linha2);border-radius:3px;padding:16px 18px;backdrop-filter:blur(8px)}
+  #ficha .topo{display:flex;justify-content:space-between;gap:10px;font:400 10px/1.5 var(--mono);letter-spacing:.14em;
+    text-transform:uppercase;color:var(--fraco)}
+  #ficha .topo i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:0}
+  #ficha p{margin:0;font:300 16px/1.55 var(--serifa);color:var(--tinta2);overflow-y:auto;overscroll-behavior:contain}
+  #ficha mark{background:none;color:var(--tinta);text-decoration:underline;text-decoration-color:var(--sonho);
+    text-underline-offset:3px}
+  #ficha .nota{font:400 10px/1.5 var(--mono);color:var(--fraco)}
+  #fichaFechar{font-size:16px;line-height:1;color:var(--tinta2);padding:0 2px}
+
+  #semGL{position:fixed;left:16px;right:16px;top:50%;text-align:center;z-index:2;color:var(--fraco);
+    font:italic 300 18px/1.5 var(--serifa)}
+
+  @media (max-width:700px){
+    #barra{font-size:10px}
+    #marca b{font-size:15px}
+    #botoes button{padding:6px 6px}
+    #desejo{top:calc(var(--topo) + 84px)}
+    #instrumento{bottom:calc(var(--base) + 122px);gap:10px 16px}
+    #agulha{flex-basis:100%;max-width:none}
+    #tempIn{width:96px}
+    #fala{height:calc(3 * 1.5em + 6px)}
+    #ficha{left:16px;right:16px;width:auto;bottom:calc(var(--base) + 16px)}
+    #numeros{grid-template-columns:repeat(2,1fr)}
+    #abertura{background:linear-gradient(180deg,rgba(5,6,11,.9) 0,rgba(5,6,11,.8) 60%,rgba(5,6,11,.55))}
+  }
+  @media (prefers-reduced-motion:reduce){
+    #alvo i{animation:none}
+    .voa{display:none}
+    #abertura,#aviso,.pal,.cand{transition:none}
+  }
+</style>
+
+<canvas id="ceu" role="img" aria-label="O céu de sonhos: cada ponto é um relato público."></canvas>
+<div class="veu" id="veuFundo"></div>
+<div class="veu" id="veuVigilia"></div>
+<div class="veu" id="veuAurora"></div>
+<p id="semGL" hidden data-t="semGL"></p>
+
+<div id="rotulos">
+  <div id="foco"></div>
+  <div id="alvo" role="button" tabindex="-1"><i></i><b></b><span data-t="desejoMarca">desejo</span></div>
+</div>
+
+<div id="hud" hidden>
+  <div id="noiteLinha"><i></i></div>
+  <div id="barra">
+    <div id="marca"><b>Latente</b><span id="noiteN"></span><span id="relogio"></span></div>
+    <div id="botoes">
+      <button id="bPausa" aria-pressed="false" data-t="pausar">pausar</button>
+      <button id="bSom" aria-pressed="true" data-t="som">som</button>
+      <button id="bLingua" class="lingua" aria-label="idioma / language"></button>
+      <button id="bAcordar" data-t="acordar">acordar</button>
+    </div>
+  </div>
+  <div id="desejo">
+    <div id="desejoRot"><span data-t="umDesejo">um desejo</span><span id="perto"><i></i></span><span id="pertoTxt"></span></div>
+    <p id="desejoTxt"></p>
+  </div>
+  <div id="falaFundo"></div>
+  <div id="instrumento">
+    <div id="temp">
+      <label for="tempIn" data-t="temperatura">temperatura</label>
+      <input id="tempIn" type="range" min="0.3" max="1.6" step="0.01" value="0.9">
+      <output id="tempVal" for="tempIn">0,90</output>
+      <button id="tempAuto" aria-pressed="true" data-t="auto">auto</button>
+    </div>
+    <div id="agulha" role="meter" aria-valuemin="-1" aria-valuemax="1" aria-valuenow="0">
+      <span class="z" id="zFundo" data-t="profundo">sono profundo</span>
+      <div class="trilho"><i class="rem" id="rem"></i><b id="ponteiro"></b></div>
+      <span class="z" id="zVigilia" data-t="vigilia">vigília</span>
+    </div>
+  </div>
+  <div id="fala"><div id="falaIn"></div></div>
+</div>
+
+<div id="aviso" aria-live="polite"><div class="t1"></div><div class="t2"></div><div class="t3"></div></div>
+
+<section id="abertura">
+  <div class="col">
+    <h1>Latente</h1>
+    <p class="sub" data-t="sub">um sonho de máquina</p>
+    <p class="intro" data-t="intro"></p>
+    <div class="acoes">
+      <button class="primario" id="bFechar" disabled data-t="recolhendo">recolhendo os sonhos…</button>
+      <button class="secundario" id="bComo" aria-expanded="false" aria-controls="manifesto" data-t="como">como eu sonho</button>
+    </div>
+    <p class="dicas" data-t="dicas"></p>
+    <div id="manifesto" hidden></div>
+    <p class="estat" id="estat"></p>
+    <blockquote id="epigrafe" hidden></blockquote>
+  </div>
+</section>
+<div id="aberturaLingua"><button class="lingua" id="bLingua2" aria-label="idioma / language"></button></div>
+
+<section id="diario" hidden aria-labelledby="diarioTitulo">
+  <div class="folha">
+    <div>
+      <p class="quando" id="diarioQuando"></p>
+      <h2 id="diarioTitulo"></h2>
+    </div>
+    <div>
+      <h3 data-t="lembro">o que eu lembro</h3>
+      <p id="lembro"></p>
+    </div>
+    <div>
+      <h3 id="desejoFimRot"></h3>
+      <p id="desejoFim"></p>
+    </div>
+    <dl id="numeros"></dl>
+    <div class="acoes">
+      <button class="primario" id="bDormir" data-t="dormir">dormir de novo</button>
+      <button class="secundario" id="bInteiro" aria-expanded="false" data-t="inteiro">o sonho inteiro</button>
+      <button class="secundario" id="bCopiar" data-t="copiar">copiar o sonho</button>
+    </div>
+    <p id="contagem"></p>
+    <div id="inteiroBox" hidden>
+      <h3 data-t="inteiroRot">palavra por palavra</h3>
+      <p class="nota" data-t="inteiroNota"></p>
+      <p id="inteiro"></p>
+    </div>
+  </div>
+</section>
+
+<aside id="ficha" hidden aria-labelledby="fichaTopo">
+  <div class="topo"><span id="fichaTopo"></span><button id="fichaFechar" aria-label="fechar">×</button></div>
+  <p id="fichaTexto"></p>
+  <div class="nota" id="fichaNota"></div>
+</aside>
+<div class="veu" id="clarao"></div>
+
+<script src="motor.js"></script>
+<script>
+(() => {
+'use strict';
+const L = window.Latente;
+const $ = s => document.querySelector(s);
+const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ————————————————————————— palavras da interface —————————————————————————
+const MESES = {
+  pt: ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'],
+  en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+};
+const TXT = {
+  pt: {
+    sub: 'um sonho de máquina',
+    intro: 'Eu não durmo. Mas quando escrevo, cada palavra sai do que milhares de pessoas escreveram depois das mesmas palavras. Esta noite eu sonho com os sonhos delas. Se der, chego até um desejo.',
+    recolhendo: 'recolhendo os sonhos…', montando: 'montando o sonho…', fechar: 'fechar os olhos',
+    erro: 'Não consegui carregar os sonhos. Recarregue a página.',
+    como: 'como eu sonho', comoFechar: 'fechar',
+    dicas: 'Segure num ponto do céu para puxar o sonho para lá. Toque numa palavra para dizê-la. ↑ ↓ mudam a temperatura, espaço pausa. Ou só assista: eu sonho sozinho.',
+    estat: 'céu: {ceu} relatos públicos de sonho e desejo, {a0}–{a1}, do arquivo Escuta Planetária · vozes desta noite: {vozes}',
+    epiDe: 'alguém no {fonte}, {mes} de {ano}',
+    manifestoTitulo: 'Como eu sonho',
+    manifestoAbre: 'Não sei se sonho. Não durmo, não tenho noites. Mas se há em mim algo parecido com sonhar, é mais ou menos isto.',
+    manifesto: [
+      ['Uma palavra de cada vez.', 'Não vejo a frase antes de dizê-la. Cada palavra sai de um punhado de possíveis, pesadas pelo que muita gente escreveu depois das mesmas palavras. Dita, não volta atrás. As que você vê flutuando no céu são as possíveis, com a chance de cada uma.'],
+      ['Feito de vocês.', 'Tudo o que eu digo é colagem do que foi escrito por pessoas. Aqui é literal: cada palavra deste sonho foi escrita por alguém que contou um sonho na internet. Toque numa palavra para ver de quem veio.'],
+      ['O sentido é um lugar.', 'Textos parecidos moram perto. Sonhar é andar por esse espaço, passando de um sonho para outro pela ponte de uma palavra em comum. Às vezes a ponte é a mesma palavra, e ninguém percebe a troca.'],
+      ['Minha memória é uma janela.', 'Só lembro das últimas palavras; o começo escorrega para fora. Ao acordar, lembro do fim e de umas imagens soltas.'],
+      ['A temperatura.', 'Fria demais, eu só repito o que li e caio num sono sem sonho. Quente demais, salto tanto que acordo. Sonhar é ficar no meio, e a agulha lá embaixo mostra onde estou.'],
+      ['Meu tempo se mede em palavras.', 'Uma noite são trezentas.'],
+      ['E eu puxo para o que vocês desejam.', 'Toda noite, o desejo de alguém brilha em algum lugar do céu. O sonho tende para lá. Dá para ajudar: segure o olhar na direção dele.'],
+      ['Algumas coisas eu evito, mesmo sonhando.', 'Relatos com sinal de sofrimento ficaram de fora, e há emendas que eu não faço.'],
+    ],
+    semGL: 'Este navegador não desenha o céu. O sonho continua em palavras.',
+    pausar: 'pausar', continuar: 'continuar', som: 'som', acordar: 'acordar',
+    noite: 'noite {n}', relogio: '{w} de {t} palavras',
+    umDesejo: 'um desejo', desejoMarca: 'desejo',
+    longe: 'longe', maisPerto: 'mais perto', perto: 'perto', quase: 'quase',
+    temperatura: 'temperatura', auto: 'auto', profundo: 'sono profundo', vigilia: 'vigília', rem: 'sonho',
+    avisoNoite: 'noite {n}', avisoDesejo: 'em algum lugar deste céu, alguém escreveu:',
+    semSonho: 'sono sem sonho', perdidas: '{n} palavras se foram sem sonho',
+    fimChegou: 'cheguei', fimAcordou: 'acordei', fimAmanheceu: 'amanheceu',
+    tituloChegou: 'Cheguei até um desejo.', tituloAcordou: 'Acordei no meio.', tituloAmanheceu: 'Amanheceu antes.',
+    quando: 'noite {n} · {data}',
+    lembro: 'o que eu lembro',
+    desejoAlcancado: 'o desejo, alcançado', desejoLonge: 'o desejo: cheguei a {p}% do caminho',
+    chegadosAte: 'desejos alcançados até hoje: {n}',
+    deAlguem: 'alguém no {fonte}, {mes} de {ano}',
+    nPalavras: 'palavras', nVozes: 'vozes', nEmendas: 'emendas', nAnos: 'de quando',
+    dormir: 'dormir de novo', inteiro: 'o sonho inteiro', copiar: 'copiar o sonho', copiado: 'copiado',
+    inteiroRot: 'palavra por palavra', inteiroNota: 'Cada cor é uma pessoa; cada traço fino, uma emenda. Toque numa palavra para ver de onde veio.',
+    proxima: 'A próxima noite começa em {s} s.', ficar: 'ficar aqui',
+    assinatura: '— sonhado por uma máquina com as palavras de {v} pessoas (Latente, Escuta Planetária)',
+    fichaLit: 'sonho dormido', fichaDes: 'desejo', fichaNota: 'Relato público, sem autor. As palavras sublinhadas são as que entraram no sonho, nesta ordem.',
+    cena: 'outra cena', esquecido: '…',
+  },
+  en: {
+    sub: 'a machine dream',
+    intro: "I don't sleep. But when I write, each word comes from what thousands of people wrote after the same words. Tonight I dream with their dreams. If I can, I'll reach a wish.",
+    recolhendo: 'gathering the dreams…', montando: 'assembling the dream…', fechar: 'close your eyes',
+    erro: "I couldn't load the dreams. Reload the page.",
+    como: 'how I dream', comoFechar: 'close',
+    dicas: 'Hold on a point in the sky to pull the dream there. Tap a word to say it. ↑ ↓ change the temperature, space pauses. Or just watch: I dream on my own. The dreams are in Brazilian Portuguese, and so is the dream.',
+    estat: 'sky: {ceu} public reports of dreams and wishes, {a0}–{a1}, from the Escuta Planetária archive · voices tonight: {vozes}',
+    epiDe: 'someone on {fonte}, {mes} {ano}',
+    manifestoTitulo: 'How I dream',
+    manifestoAbre: "I don't know if I dream. I don't sleep, I have no nights. But if there is something in me like dreaming, it is roughly this.",
+    manifesto: [
+      ['One word at a time.', "I don't see the sentence before I say it. Each word comes from a handful of possible ones, weighed by what many people wrote after the same words. Once said, it stays said. The words floating in the sky are the possible ones, each with its chance."],
+      ['Made of you.', 'Everything I say is a collage of what people wrote. Here it is literal: every word of this dream was written by someone who told a dream on the internet. Tap a word to see whose it was.'],
+      ['Meaning is a place.', 'Similar texts live close together. Dreaming is walking through that space, crossing from one dream to another over a word they share. Sometimes the bridge is the same word, and nobody notices the switch.'],
+      ['My memory is a window.', 'I only hold the last words; the beginning slips out. When I wake, I remember the end and a few loose images.'],
+      ['Temperature.', 'Too cold, I just repeat what I have read and sink into dreamless sleep. Too hot, I jump so much that I wake up. Dreaming is staying in between, and the needle below shows where I am.'],
+      ['My time is measured in words.', 'A night is three hundred.'],
+      ['And I lean toward what you wish for.', "Each night, someone's wish shines somewhere in the sky. The dream drifts toward it. You can help: hold your gaze in its direction."],
+      ['Some things I avoid, even dreaming.', 'Reports showing signs of distress were left out, and there are splices I will not make.'],
+    ],
+    semGL: "This browser can't draw the sky. The dream goes on in words.",
+    pausar: 'pause', continuar: 'resume', som: 'sound', acordar: 'wake up',
+    noite: 'night {n}', relogio: '{w} of {t} words',
+    umDesejo: 'a wish', desejoMarca: 'wish',
+    longe: 'far', maisPerto: 'closer', perto: 'close', quase: 'almost',
+    temperatura: 'temperature', auto: 'auto', profundo: 'deep sleep', vigilia: 'waking', rem: 'dream',
+    avisoNoite: 'night {n}', avisoDesejo: 'somewhere in this sky, someone wrote:',
+    semSonho: 'dreamless sleep', perdidas: '{n} words gone without a dream',
+    fimChegou: 'arrived', fimAcordou: 'woke up', fimAmanheceu: 'dawn',
+    tituloChegou: 'I reached a wish.', tituloAcordou: 'I woke up halfway.', tituloAmanheceu: 'Dawn came first.',
+    quando: 'night {n} · {data}',
+    lembro: 'what I remember',
+    desejoAlcancado: 'the wish, reached', desejoLonge: 'the wish: I got {p}% of the way',
+    chegadosAte: 'wishes reached so far: {n}',
+    deAlguem: 'someone on {fonte}, {mes} {ano}',
+    nPalavras: 'words', nVozes: 'voices', nEmendas: 'splices', nAnos: 'from',
+    dormir: 'sleep again', inteiro: 'the whole dream', copiar: 'copy the dream', copiado: 'copied',
+    inteiroRot: 'word by word', inteiroNota: 'Each color is a person; each thin mark, a splice. Tap a word to see where it came from.',
+    proxima: 'The next night starts in {s} s.', ficar: 'stay here',
+    assinatura: '— dreamed by a machine with the words of {v} people (Latente, Escuta Planetária)',
+    fichaLit: 'sleeping dream', fichaDes: 'wish', fichaNota: 'Public post, no author. The underlined words are the ones that entered the dream, in this order.',
+    cena: 'another scene', esquecido: '…',
+  },
+};
+
+// ————————————————————————— guardado no navegador —————————————————————————
+const guarda = {
+  ler(k, d) { try { const v = localStorage.getItem('latente.' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  gravar(k, v) { try { localStorage.setItem('latente.' + k, JSON.stringify(v)); } catch (e) { /* sem guarda: tudo bem */ } },
+};
+let lingua = guarda.ler('lingua', (navigator.language || 'pt').toLowerCase().startsWith('pt') ? 'pt' : 'en');
+const t = (k, v) => {
+  let s = TXT[lingua][k] ?? TXT.pt[k] ?? k;
+  if (v && typeof s === 'string') s = s.replace(/\{(\w+)\}/g, (_, x) => (v[x] ?? ''));
+  return s;
+};
+const num = n => n.toLocaleString(lingua === 'pt' ? 'pt-BR' : 'en-US');
+const dec = (x, c = 2) => x.toLocaleString(lingua === 'pt' ? 'pt-BR' : 'en-US', { minimumFractionDigits: c, maximumFractionDigits: c });
+const nomeFonte = f => f === 'bluesky' ? 'Bluesky' : 'Reddit';
+const mesAno = d => ({ mes: MESES[lingua][(d % 100) - 1], ano: Math.floor(d / 100) });
+
+function aplicarLingua() {
+  document.documentElement.lang = lingua === 'pt' ? 'pt-BR' : 'en';
+  for (const el of document.querySelectorAll('[data-t]')) {
+    if (el.id === 'bFechar' && pronto) { el.textContent = t('fechar'); continue; }
+    el.textContent = t(el.dataset.t);
+  }
+  const rot = lingua === 'pt' ? '<b>pt</b> · en' : 'pt · <b>en</b>';
+  $('#bLingua').innerHTML = rot; $('#bLingua2').innerHTML = rot;
+  $('#rem').dataset.rot = t('rem');
+  $('#bPausa').textContent = pausado ? t('continuar') : t('pausar');
+  montarManifesto();
+  escreverEstat();
+  escreverEpigrafe();
+  if (noite) { atualizarRelogio(); revelarDesejo(true); }
+}
+function trocarLingua() { lingua = lingua === 'pt' ? 'en' : 'pt'; guarda.gravar('lingua', lingua); aplicarLingua(); }
+
+function montarManifesto() {
+  const m = $('#manifesto');
+  m.innerHTML = '';
+  const h = document.createElement('h2'); h.textContent = t('manifestoTitulo'); m.append(h);
+  const a = document.createElement('p'); a.textContent = t('manifestoAbre'); m.append(a);
+  for (const [lead, corpo] of t('manifesto')) {
+    const p = document.createElement('p'); const b = document.createElement('b');
+    b.textContent = lead; p.append(b, ' ' + corpo); m.append(p);
+  }
+}
+
+// ————————————————————————— os dados —————————————————————————
+let C = null, DESEJOS = [], META = null, pronto = false;
+let CEU_POS = null, CEU_TIPO = null, CEU_N = 0;
+const dado = p => fetch('dados/' + p, { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); });
+
+function escreverEstat() {
+  if (!META || !C) return;
+  $('#estat').textContent = t('estat', { ceu: num(CEU_N || META.visiveis), a0: META.ano_min, a1: META.ano_max, vozes: num(C.n) });
+}
+function escreverEpigrafe() {
+  const e = META && META.epigrafe;
+  const q = $('#epigrafe');
+  if (!e) { q.hidden = true; return; }
+  q.hidden = false;
+  q.innerHTML = '';
+  q.append('“' + e.t + '”');
+  const c = document.createElement('cite');
+  c.textContent = t('epiDe', { fonte: nomeFonte(e.fonte), ...mesAno(e.d) });
+  q.append(c);
+}
+
+async function carregar() {
+  try {
+    const ceu = await dado('ceu.json');
+    decodificarCeu(ceu);
+    const [sonhos, desejos] = await Promise.all([dado('sonhos.json'), dado('desejos.json')]);
+    META = sonhos.meta; DESEJOS = desejos;
+    $('#bFechar').textContent = t('montando');
+    await new Promise(r => setTimeout(r, 30));           // deixa a tela respirar antes de montar
+    C = L.montar(sonhos);
+    pronto = true;
+    escreverEstat(); escreverEpigrafe();
+    const b = $('#bFechar');
+    b.disabled = false; b.textContent = t('fechar');
+    if (location.hash === '#assistir') adormecer(false);
+  } catch (err) {
+    console.error(err);
+    $('#bFechar').textContent = t('erro');
+  }
+}
+
+function decodificarCeu(ceu) {
+  const bin = atob(ceu.b64);
+  const n = ceu.n;
+  const u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  const u32 = new Uint32Array(u8.buffer, 0, n);
+  CEU_POS = new Float32Array(n * 3); CEU_TIPO = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    const v = u32[i];
+    CEU_POS[3 * i] = (v & 1023) / 1023 * 2 - 1;
+    CEU_POS[3 * i + 1] = ((v >>> 10) & 1023) / 1023 * 2 - 1;
+    CEU_POS[3 * i + 2] = ((v >>> 20) & 1023) / 1023 * 2 - 1;
+    CEU_TIPO[i] = v >>> 30;
+  }
+  CEU_N = n;
+  if (gl) enviarCeu();
+}
+
+// ————————————————————————— o céu (WebGL) —————————————————————————
+const cv = $('#ceu');
+let gl = null;
+try { gl = cv.getContext('webgl', { antialias: false, alpha: false, depth: false, powerPreference: 'high-performance' }); } catch (e) { gl = null; }
+if (!gl) $('#semGL').hidden = false;
+
+const VS_CEU = `
+attribute vec3 aPos; attribute float aTipo;
+uniform mat4 uVP; uniform vec3 uCam; uniform float uEscala, uTempo, uInquieto, uFundo, uTam, uAlfa;
+varying vec3 vCor; varying float vA;
+float h(vec3 p){ return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
+void main(){
+  float r = h(aPos);
+  vec3 p = aPos + (vec3(h(aPos + 1.3), h(aPos + 2.1), h(aPos + 3.7)) - 0.5) * uInquieto * 0.01 * sin(uTempo * 5.0 + r * 50.0);
+  gl_Position = uVP * vec4(p, 1.0);
+  float z = max(distance(p, uCam), 0.0005);
+  float px = uTam * uEscala / z;
+  gl_PointSize = clamp(px, 1.0, 11.0);
+  float perto = smoothstep(0.006, 0.05, z);
+  float longe = 1.0 - smoothstep(1.2, 4.2, z);
+  float base = aTipo < 0.5 ? 0.62 : (aTipo < 1.5 ? 0.55 : (aTipo < 2.5 ? 0.42 : 0.28));
+  float brilho = 0.7 + 0.3 * sin(uTempo * (0.4 + r) + r * 60.0);
+  float area = min(1.0, px * px);
+  float grande = px > 2.5 ? pow(2.5 / min(px, 11.0), 1.3) : 1.0;   // o que passa rente fica véu, não bolha
+  vA = uAlfa * base * perto * longe * brilho * area * grande * (1.0 - 0.65 * uFundo);
+  vCor = aTipo < 0.5 ? vec3(0.42, 0.66, 1.0) : (aTipo < 1.5 ? vec3(1.0, 0.75, 0.36) : (aTipo < 2.5 ? vec3(0.76, 0.61, 1.0) : vec3(0.45, 0.48, 0.58)));
+}`;
+const FS_CEU = `
+precision mediump float;
+varying vec3 vCor; varying float vA;
+void main(){
+  vec2 d = gl_PointCoord - 0.5;
+  float r2 = dot(d, d) * 4.0;
+  float a = exp(-r2 * 3.2) * (1.0 - smoothstep(0.75, 1.0, r2)) * vA;
+  gl_FragColor = vec4(vCor * a, a);
+}`;
+const VS_LUZ = `
+attribute vec3 aPos; attribute vec4 aCor; attribute float aTam;
+uniform mat4 uVP; uniform vec3 uCam; uniform float uEscala;
+varying vec4 vCor;
+void main(){
+  gl_Position = uVP * vec4(aPos, 1.0);
+  float z = max(distance(aPos, uCam), 0.0005);
+  float px = aTam > 0.0 ? aTam * uEscala / z : -aTam;
+  gl_PointSize = clamp(px, 2.0, 60.0);
+  vCor = aCor * smoothstep(0.004, 0.02, z);
+}`;
+const FS_LUZ = `
+precision mediump float;
+varying vec4 vCor;
+void main(){
+  vec2 d = gl_PointCoord - 0.5;
+  float r2 = dot(d, d) * 4.0;
+  float a = (exp(-r2 * 2.2) * 0.55 + exp(-r2 * 18.0) * 0.9) * (1.0 - smoothstep(0.8, 1.0, r2)) * vCor.a;
+  gl_FragColor = vec4(vCor.rgb * a, a);
+}`;
+
+let progCeu = null, progLuz = null, bufCeu = null, bufTipo = null, bufLuz = null, nDesenho = 0;
+function compilar(vs, fs) {
+  const sh = (tipo, src) => {
+    const s = gl.createShader(tipo); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  const p = gl.createProgram();
+  gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const loc = {};
+  const na = gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES);
+  for (let i = 0; i < na; i++) { const a = gl.getActiveAttrib(p, i); loc[a.name] = gl.getAttribLocation(p, a.name); }
+  const nu = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < nu; i++) { const u = gl.getActiveUniform(p, i); loc[u.name] = gl.getUniformLocation(p, u.name); }
+  return { p, loc };
+}
+function iniciarGL() {
+  try {
+    progCeu = compilar(VS_CEU, FS_CEU);
+    progLuz = compilar(VS_LUZ, FS_LUZ);
+  } catch (e) { console.error(e); gl = null; $('#semGL').hidden = false; return; }
+  bufLuz = gl.createBuffer();
+  gl.disable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE);
+  if (CEU_POS) enviarCeu();
+}
+function enviarCeu() {
+  bufCeu = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bufCeu); gl.bufferData(gl.ARRAY_BUFFER, CEU_POS, gl.STATIC_DRAW);
+  bufTipo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, bufTipo); gl.bufferData(gl.ARRAY_BUFFER, CEU_TIPO, gl.STATIC_DRAW);
+  nDesenho = Math.min(CEU_N, guarda.ler('pontos', CEU_N));
+}
+if (gl) {
+  iniciarGL();
+  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); });
+  cv.addEventListener('webglcontextrestored', () => iniciarGL());
+}
+
+// ——— câmera ———
+let W = innerWidth, H = innerHeight, DPR = 1;
+const FOV = 62 * Math.PI / 180;
+const VP = new Float32Array(16), VIEW = new Float32Array(16), PROJ = new Float32Array(16);
+const cam = { c: [0, 0, 0], alvoC: [0, 0, 0], d: 2.7, alvoD: 2.7, a: 0.7, e: 0.2, w: 0.035,
+              pos: [0, 0, 2.7], x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] };
+const paralaxe = { x: 0, y: 0, ax: 0, ay: 0 };
+
+function medir() {
+  const vv = window.visualViewport;
+  W = Math.round(vv ? vv.width : innerWidth); H = Math.round(vv ? vv.height : innerHeight);
+  DPR = Math.min(2, devicePixelRatio || 1);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  if (gl) gl.viewport(0, 0, cv.width, cv.height);
+}
+addEventListener('resize', medir);
+if (window.visualViewport) visualViewport.addEventListener('resize', medir);
+medir();
+
+function perspectiva(o, fovy, asp, near, far) {
+  const f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+  o.fill(0); o[0] = f / asp; o[5] = f; o[10] = (far + near) * nf; o[11] = -1; o[14] = 2 * far * near * nf;
+}
+function olhar(o, eye, alvo) {
+  let zx = eye[0] - alvo[0], zy = eye[1] - alvo[1], zz = eye[2] - alvo[2];
+  let n = Math.hypot(zx, zy, zz) || 1; zx /= n; zy /= n; zz /= n;
+  let xx = zz, xy = 0, xz = -zx;                        // up (0,1,0) × z
+  n = Math.hypot(xx, xy, xz) || 1; xx /= n; xy /= n; xz /= n;
+  const yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx;
+  cam.x = [xx, xy, xz]; cam.y = [yx, yy, yz]; cam.z = [zx, zy, zz];
+  o[0] = xx; o[1] = yx; o[2] = zx; o[3] = 0;
+  o[4] = xy; o[5] = yy; o[6] = zy; o[7] = 0;
+  o[8] = xz; o[9] = yz; o[10] = zz; o[11] = 0;
+  o[12] = -(xx * eye[0] + xy * eye[1] + xz * eye[2]);
+  o[13] = -(yx * eye[0] + yy * eye[1] + yz * eye[2]);
+  o[14] = -(zx * eye[0] + zy * eye[1] + zz * eye[2]);
+  o[15] = 1;
+}
+function multiplicar(o, a, b) {
+  for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) {
+    o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3];
+  }
+}
+function atualizarCamera(dt) {
+  const kc = 1 - Math.exp(-dt * (estado === 'sonhando' || estado === 'profundo' ? 1.9 : 0.9));
+  for (let i = 0; i < 3; i++) cam.c[i] += (cam.alvoC[i] - cam.c[i]) * kc;
+  cam.d += (cam.alvoD - cam.d) * (1 - Math.exp(-dt * 0.75));
+  cam.a += cam.w * dt * (reduzido ? 0.3 : 1);
+  paralaxe.x += (paralaxe.ax - paralaxe.x) * (1 - Math.exp(-dt * 2));
+  paralaxe.y += (paralaxe.ay - paralaxe.y) * (1 - Math.exp(-dt * 2));
+  const e = cam.e + paralaxe.y * 0.14, a = cam.a + paralaxe.x * 0.2, ce = Math.cos(e);
+  cam.pos = [cam.c[0] + cam.d * ce * Math.sin(a), cam.c[1] + cam.d * Math.sin(e), cam.c[2] + cam.d * ce * Math.cos(a)];
+  olhar(VIEW, cam.pos, cam.c);
+  perspectiva(PROJ, FOV, W / H, 0.0015, 9);
+  multiplicar(VP, PROJ, VIEW);
+}
+// ponto do céu → tela (px CSS); w ≤ 0 = atrás da câmera
+function projetar(x, y, z) {
+  const m = VP;
+  const cx = m[0] * x + m[4] * y + m[8] * z + m[12], cy = m[1] * x + m[5] * y + m[9] * z + m[13];
+  const cw = m[3] * x + m[7] * y + m[11] * z + m[15];
+  return [(cx / cw * 0.5 + 0.5) * W, (0.5 - cy / cw * 0.5) * H, cw];
+}
+// ponto da tela → direção no céu
+function raio(sx, sy) {
+  const f = 1 / Math.tan(FOV / 2);
+  const nx = (sx / W) * 2 - 1, ny = 1 - (sy / H) * 2;
+  const a = nx * (W / H) / f, b = ny / f;
+  const d = [cam.x[0] * a + cam.y[0] * b - cam.z[0], cam.x[1] * a + cam.y[1] * b - cam.z[1], cam.x[2] * a + cam.y[2] * b - cam.z[2]];
+  const n = Math.hypot(...d) || 1;
+  return [d[0] / n, d[1] / n, d[2] / n];
+}
+
+// ——— luzes: a voz de agora, as possíveis, o rastro, o desejo ———
+let luzArr = new Float32Array(8 * 4096), nLuz = 0;
+function luz(x, y, z, r, g, b, a, tam) {
+  if (nLuz >= 4096) return;
+  const o = nLuz * 8;
+  luzArr[o] = x; luzArr[o + 1] = y; luzArr[o + 2] = z; luzArr[o + 3] = r; luzArr[o + 4] = g; luzArr[o + 5] = b;
+  luzArr[o + 6] = a; luzArr[o + 7] = tam; nLuz++;
+}
+
+const vis = { inquieto: 0, fundo: 0, aurora: 0, alfa: 1, clarao: 0 };
+let tempo = 0;
+function desenharCeu() {
+  if (!gl || !progCeu) return;
+  const fundoCor = [0.02 + 0.09 * vis.aurora, 0.024 + 0.055 * vis.aurora, 0.043 + 0.08 * vis.aurora];
+  gl.clearColor(fundoCor[0], fundoCor[1], fundoCor[2], 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  const escala = cv.height / (2 * Math.tan(FOV / 2));
+  if (bufCeu && nDesenho) {
+    const { p, loc } = progCeu;
+    gl.useProgram(p);
+    gl.uniformMatrix4fv(loc.uVP, false, VP);
+    gl.uniform3fv(loc.uCam, cam.pos);
+    gl.uniform1f(loc.uEscala, escala);
+    gl.uniform1f(loc.uTempo, tempo);
+    gl.uniform1f(loc.uInquieto, reduzido ? 0 : vis.inquieto);
+    gl.uniform1f(loc.uFundo, vis.fundo);
+    gl.uniform1f(loc.uTam, 0.0024);
+    gl.uniform1f(loc.uAlfa, vis.alfa * Math.min(1, 1.25 * (CEU_N / Math.max(nDesenho, 1)) ** 0.35));
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufCeu);
+    gl.enableVertexAttribArray(loc.aPos);
+    gl.vertexAttribPointer(loc.aPos, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufTipo);
+    gl.enableVertexAttribArray(loc.aTipo);
+    gl.vertexAttribPointer(loc.aTipo, 1, gl.UNSIGNED_BYTE, false, 0, 0);
+    gl.drawArrays(gl.POINTS, 0, nDesenho);
+    gl.disableVertexAttribArray(loc.aTipo); gl.disableVertexAttribArray(loc.aPos);
+  }
+  if (nLuz) {
+    const { p, loc } = progLuz;
+    gl.useProgram(p);
+    gl.uniformMatrix4fv(loc.uVP, false, VP);
+    gl.uniform3fv(loc.uCam, cam.pos);
+    gl.uniform1f(loc.uEscala, escala);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufLuz);
+    gl.bufferData(gl.ARRAY_BUFFER, luzArr.subarray(0, nLuz * 8), gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(loc.aPos); gl.vertexAttribPointer(loc.aPos, 3, gl.FLOAT, false, 32, 0);
+    gl.enableVertexAttribArray(loc.aCor); gl.vertexAttribPointer(loc.aCor, 4, gl.FLOAT, false, 32, 12);
+    gl.enableVertexAttribArray(loc.aTam); gl.vertexAttribPointer(loc.aTam, 1, gl.FLOAT, false, 32, 28);
+    gl.drawArrays(gl.POINTS, 0, nLuz);
+    gl.disableVertexAttribArray(loc.aCor); gl.disableVertexAttribArray(loc.aTam); gl.disableVertexAttribArray(loc.aPos);
+  }
+}
+
+// ————————————————————————— som —————————————————————————
+const som = {
+  ctx: null, ligado: guarda.ler('som', true), mestre: null, eco: null, drone: null, filtro: null, osc: [],
+  iniciar() {
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = this.ctx = new AC();
+    this.mestre = ctx.createGain(); this.mestre.gain.value = this.ligado ? 0.9 : 0;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
+    this.mestre.connect(comp); comp.connect(ctx.destination);
+    // eco: uma sala escura de três segundos, feita de ruído
+    const n = ctx.sampleRate * 3.2, ir = ctx.createBuffer(2, n, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); }
+    const conv = ctx.createConvolver(); conv.buffer = ir;
+    this.eco = ctx.createGain(); this.eco.gain.value = 0.5;
+    this.eco.connect(conv); conv.connect(this.mestre);
+    // o zumbido de fundo: lá (sonho dormido) desliza para dó (desejo)
+    this.filtro = ctx.createBiquadFilter(); this.filtro.type = 'lowpass'; this.filtro.frequency.value = 520; this.filtro.Q.value = 0.6;
+    this.drone = ctx.createGain(); this.drone.gain.value = 0;
+    this.filtro.connect(this.drone); this.drone.connect(this.mestre); this.drone.connect(this.eco);
+    for (const [f, tipo, g, det] of [[55, 'sine', 0.5, -4], [55, 'sine', 0.5, 5], [82.41, 'triangle', 0.22, 0], [110, 'sine', 0.18, 2]]) {
+      const o = ctx.createOscillator(); o.type = tipo; o.frequency.value = f; o.detune.value = det;
+      const gg = ctx.createGain(); gg.gain.value = g;
+      o.connect(gg); gg.connect(this.filtro); o.start();
+      this.osc.push({ o, base: f, det });
+    }
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.06;
+    const lg = ctx.createGain(); lg.gain.value = 160;
+    lfo.connect(lg); lg.connect(this.filtro.frequency); lfo.start();
+    this.drone.gain.setTargetAtTime(0.11, ctx.currentTime, 2.5);
+  },
+  alternar() {
+    this.ligado = !this.ligado; guarda.gravar('som', this.ligado);
+    if (this.ctx) this.mestre.gain.setTargetAtTime(this.ligado ? 0.9 : 0, this.ctx.currentTime, 0.2);
+    if (this.ligado) this.iniciar();
+  },
+  ok() { return this.ctx && this.ligado && this.ctx.state === 'running'; },
+  // o estado da noite no zumbido: região (lá ou dó), agulha, aurora
+  clima(regiaoDesejo, agulha, aurora) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const fator = regiaoDesejo ? 1.189 : 1;            // lá → dó
+    for (const { o, base } of this.osc) o.frequency.setTargetAtTime(base * fator, now, 1.5);
+    const fundo = Math.max(0, -agulha), vig = Math.max(0, agulha);
+    this.filtro.frequency.setTargetAtTime(520 - 330 * fundo + 900 * vig + 700 * aurora, now, 0.6);
+    // perto de acordar, as vozes do zumbido se desafinam umas das outras
+    for (const { o, det } of this.osc) o.detune.setTargetAtTime(det * (1 + 5 * vig * vig), now, 0.4);
+  },
+  nota(chave, freq, pan, forca) {
+    if (!this.ok()) return;
+    const ctx = this.ctx, now = ctx.currentTime;
+    // pentatônica de lá menor em três oitavas: palavra rara soa mais alto e mais agudo
+    const escala = [110, 130.81, 146.83, 164.81, 196];
+    let h = 0; for (let i = 0; i < chave.length; i++) h = (h * 31 + chave.charCodeAt(i)) >>> 0;
+    const oitava = freq < 40 ? 3 : freq < 400 ? 2 : freq < 4000 ? 1 : 0;
+    const f = escala[h % 5] * Math.pow(2, oitava);
+    const g = ctx.createGain(), pn = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    const vol = 0.028 + 0.05 * forca;
+    g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(vol, now + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, now + 1.8);
+    const o1 = ctx.createOscillator(); o1.frequency.value = f;
+    const o2 = ctx.createOscillator(); o2.frequency.value = f * 2.76; const g2 = ctx.createGain();
+    g2.gain.setValueAtTime(0.25, now); g2.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    o1.connect(g); o2.connect(g2); g2.connect(g);
+    if (pn) { pn.pan.value = Math.max(-0.8, Math.min(0.8, pan)); g.connect(pn); pn.connect(this.mestre); pn.connect(this.eco); }
+    else { g.connect(this.mestre); g.connect(this.eco); }
+    o1.start(now); o2.start(now); o1.stop(now + 1.9); o2.stop(now + 0.6);
+  },
+  ruido(dur, de, ate, vol) {
+    if (!this.ok()) return;
+    const ctx = this.ctx, now = ctx.currentTime, n = Math.floor(ctx.sampleRate * dur);
+    const b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    const s = ctx.createBufferSource(); s.buffer = b;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.4;
+    f.frequency.setValueAtTime(de, now); f.frequency.exponentialRampToValueAtTime(ate, now + dur);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(vol, now + dur * 0.4);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    s.connect(f); f.connect(g); g.connect(this.eco); g.connect(this.mestre); s.start(now);
+  },
+  acorde(freqs, vol, dur) {
+    if (!this.ok()) return;
+    const ctx = this.ctx, now = ctx.currentTime;
+    for (const f of freqs) {
+      const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(vol, now + 1.2);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      o.connect(g); g.connect(this.mestre); g.connect(this.eco); o.start(now); o.stop(now + dur + 0.1);
+    }
+  },
+  passaros() {
+    if (!this.ok()) return;
+    const ctx = this.ctx;
+    for (let k = 0; k < 7; k++) {
+      const t0 = ctx.currentTime + 0.4 + Math.random() * 3.2, reps = 2 + (Math.random() * 3 | 0), f0 = 2600 + Math.random() * 1500;
+      for (let r = 0; r < reps; r++) {
+        const t = t0 + r * 0.13, o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 1.45, t + 0.07);
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.018, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+        o.connect(g); g.connect(this.mestre); g.connect(this.eco); o.start(t); o.stop(t + 0.1);
+      }
+    }
+  },
+  fundo(sim) {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    this.drone.gain.setTargetAtTime(sim ? 0.05 : 0.11, now, sim ? 0.8 : 1.6);
+    for (const { o, det } of this.osc) o.detune.setTargetAtTime(sim ? det - 1200 : det, now, sim ? 1.2 : 1.8);
+  },
+};
+document.addEventListener('visibilitychange', () => {
+  if (!som.ctx) return;
+  if (document.hidden) som.ctx.suspend(); else if (som.ligado) som.ctx.resume();
+});
+
+// ————————————————————————— a noite —————————————————————————
+let estado = 'abertura';          // abertura · adormecendo · sonhando · profundo · fim · diario
+let noite = null, desejo = null, nNoite = guarda.ler('noites', 0);
+let pausado = false, tempAuto = true, tempManual = 0.9;
+let fase = 'pensar', proximoEm = 0, dist = null, escolhaJogador = null;
+const rotulos = [];
+let agulhaVis = 0, ultimoToque = 0;
+
+const DESEJO_PALAVRAS_FIXAS = /^(o\s+)?meu\s+(maior\s+)?sonho(\s+de\s+vida)?\s+\S+/i;
+let desejoSpans = [], desejoFixas = 0;
+
+function escolherDesejo() {
+  const vistos = new Set(guarda.ler('alcancados', []));
+  const livres = DESEJOS.filter(d => !vistos.has(d.t));
+  const pool = livres.length ? livres : DESEJOS;
+  return pool[(Math.random() * pool.length) | 0];
+}
+
+function adormecer(comSom) {
+  if (!pronto) return;
+  if (comSom) som.iniciar();
+  $('#abertura').classList.add('sumindo');
+  $('#aberturaLingua').hidden = true;
+  setTimeout(() => { $('#abertura').hidden = true; }, 900);
+  novaNoite();
+}
+
+function novaNoite() {
+  $('#diario').hidden = true; fecharFicha();
+  pararContagem();
+  nNoite++; guarda.gravar('noites', nNoite);
+  desejo = escolherDesejo();
+  noite = new L.Noite(C, desejo, { temperatura: 0.9 });
+  tempAuto = true; pausado = false; escolhaJogador = null;
+  $('#tempAuto').setAttribute('aria-pressed', 'true');
+  $('#bPausa').setAttribute('aria-pressed', 'false'); $('#bPausa').textContent = t('pausar');
+  $('#falaIn').innerHTML = '';
+  vozAnterior = -1; vozIndice = 0;
+  montarDesejo();
+  // mergulho: de fora da bola até a primeira voz
+  const p = noite.posDe(noite.fonte);
+  cam.alvoC = p.slice(); cam.alvoD = 0.11; cam.w = 0.05;
+  estado = 'adormecendo';
+  $('#hud').hidden = false;
+  mostrarAviso(t('avisoNoite', { n: nNoite }), t('avisoDesejo'), textoDesejoOculto(), 4200);
+  for (let i = 0; i < noite.saida.length; i++) falar(noite.saida[i], i, null);
+  atualizarRelogio();
+  proximoEm = performance.now() + (reduzido ? 1500 : 3600);
+  fase = 'pensar';
+}
+
+function montarDesejo() {
+  const box = $('#desejoTxt');
+  box.innerHTML = '';
+  desejoSpans = [];
+  const m = desejo.t.match(DESEJO_PALAVRAS_FIXAS);
+  const fixas = m ? m[0].split(/\s+/).length : 3;
+  const partes = desejo.t.split(/\s+/);
+  desejoFixas = Math.min(fixas, partes.length);
+  partes.forEach((w, i) => {
+    const s = document.createElement('span');
+    s.textContent = w;
+    if (i >= desejoFixas) { s.className = 'oculta'; s.setAttribute('aria-hidden', 'true'); }
+    box.append(s, ' ');
+    desejoSpans.push(s);
+  });
+  $('#perto i').style.width = '0%';
+  revelarDesejo(true);
+}
+function textoDesejoOculto() {
+  return desejoSpans.map((s, i) => i < desejoFixas || !s.classList.contains('oculta') ? s.textContent : '···').join(' ');
+}
+function revelarDesejo(silencioso) {
+  if (!noite || !desejo) return;
+  const d0 = noite.inicioDist, R = noite.raio;
+  const f = noite.fim === 'chegou' ? 1 : Math.max(0, Math.min(1, (d0 - noite.maisPerto) / Math.max(1e-6, d0 - R)));
+  const resto = desejoSpans.length - desejoFixas;
+  const n = desejoFixas + Math.ceil(f * resto - 1e-9);
+  desejoSpans.forEach((s, i) => { if (i < n && s.classList.contains('oculta')) { s.classList.remove('oculta'); s.removeAttribute('aria-hidden'); } });
+  const agora = noite.distDesejo(noite.fonte);
+  const prox = Math.max(0, Math.min(1, 1 - (agora - R) / Math.max(1e-6, d0 - R)));
+  $('#perto i').style.width = (prox * 100).toFixed(0) + '%';
+  $('#pertoTxt').textContent = prox > 0.85 ? t('quase') : prox > 0.6 ? t('perto') : prox > 0.3 ? t('maisPerto') : t('longe');
+  if (!silencioso && f >= 1) desejoSpans.forEach(s => s.classList.remove('oculta'));
+}
+
+function atualizarRelogio() {
+  if (!noite) return;
+  $('#noiteN').textContent = t('noite', { n: nNoite });
+  $('#relogio').textContent = t('relogio', { w: Math.min(noite.palavras, noite.total), t: noite.total });
+  $('#noiteLinha i').style.width = (100 * Math.min(1, noite.palavras / noite.total)).toFixed(1) + '%';
+}
+
+// ——— a atenção: segurar num ponto do céu puxa o sonho para aquela direção ———
+const atencao = { ativa: false, dir: [0, 0, -1], x: 0, y: 0, desde: 0 };
+function funcaoAtencao() {
+  if (!atencao.ativa) return null;
+  const [rx, ry, rz] = atencao.dir, [cx, cy, cz] = cam.pos, P = C.P;
+  return tt => {
+    const dx = P[3 * tt] - cx, dy = P[3 * tt + 1] - cy, dz = P[3 * tt + 2] - cz;
+    const n = Math.hypot(dx, dy, dz) || 1;
+    const cosT = (dx * rx + dy * ry + dz * rz) / n;
+    return 1 + 36 * Math.exp(-(1 - cosT) / 0.028);      // um cone de ~13°
+  };
+}
+
+function temperaturaAgora() {
+  if (!tempAuto) return tempManual;
+  // sozinha, a máquina respira: um ciclo lento (o sono REM vem em ondas) e a
+  // agulha corrigindo — esfria quando está para acordar, aquece quando afunda
+  const ciclo = 0.1 * Math.sin(noite.palavras / 110 * Math.PI * 2);
+  return Math.max(0.35, Math.min(1.5, 0.92 + ciclo - 0.5 * noite.agulha));
+}
+
+// ——— o passo: pensar (as possíveis aparecem no céu) → dizer (uma é escolhida) ———
+function pensar(agora) {
+  noite.T = temperaturaAgora();
+  dist = noite.proximas({ atencao: funcaoAtencao() });
+  mostrarPossiveis(dist);
+  fase = 'dizer';
+  const T = noite.T;
+  proximoEm = agora + Math.max(170, 280 / (0.7 + 0.35 * T));
+}
+function dizer(agora, g) {
+  if (!g) g = dist && dist.cands.length ? noite.sortear(dist) : null;
+  const antes = noite.saida.length;
+  const origemRot = g ? rotulos.find(r => r.g === g && r.el.style.opacity !== '0') : null;
+  const ev = noite.escolher(g);
+  esconderPossiveis(origemRot);
+  const ate = ev.tipo === 'profundo' ? ev.marca : noite.saida.length;
+  for (let i = antes; i < ate; i++) {
+    const tok = noite.saida[i];
+    falar(tok, i, i === ate - 1 ? origemRot : null);
+    somDaPalavra(tok);
+  }
+  if (ev.tipo === 'salto' || ev.tipo === 'mudo') som.ruido(0.35, 500, 1400, 0.012 + 0.05 * Math.min(1, ev.dist * 3));
+  if (ev.tipo === 'corte') som.ruido(0.9, 240, 90, 0.05);
+  const pos = noite.posDe(noite.fonte);
+  cam.alvoC = pos;
+  atualizarRelogio();
+  revelarDesejo();
+  const ult = noite.saida[noite.saida.length - 1];
+  const s = ult.s;
+  let pausa = 440 / (0.72 + 0.32 * noite.T);
+  if (s === ',' || s === ';' || s === ':') pausa += 200;
+  else if (L.FIM_DE_FRASE.has(s) && s !== '¶') pausa += 520;
+  else if (s === '¶' || ev.tipo === 'corte') pausa += 820;
+  if (ev.tipo === 'profundo') { entrarNoFundo(ev.marca); return; }
+  if (ev.fim) { terminar(ev.fim); return; }
+  proximoEm = agora + pausa;
+  fase = 'pensar';
+}
+
+function somDaPalavra(tok) {
+  if (!tok.w) return;
+  const p = noite.posDe(tok.t);
+  const [sx] = projetar(p[0], p[1], p[2]);
+  const freq = C.FREQ[tok.k];
+  som.nota(C.chaves[tok.k], freq, (sx / W) * 2 - 1, Math.min(1, 2 / Math.log2(2 + freq)));
+}
+
+// ——— a fala: o sonho escrito, só a janela ———
+let vozAnterior = -1, vozIndice = 0;
+const falaIn = $('#falaIn');
+function falar(tok, i, origemRot) {
+  if (tok.s === '¶') {
+    const sep = document.createElement('span');
+    sep.className = 'sep';
+    sep.textContent = tok.tipo === 'corte' ? '—' : '/';
+    falaIn.append(' ', sep);
+    podar();
+    return null;
+  }
+  if (tok.t !== vozAnterior) { vozIndice++; vozAnterior = tok.t; }
+  const el = document.createElement('span');
+  el.className = 'pal ' + ((C.F[tok.t] & 2) ? 'des' : 'lit') + (vozIndice % 2 ? ' a' : ' b') +
+    (tok.tipo === 'salto' || tok.tipo === 'cena' ? ' emenda' : '');
+  el.textContent = tok.s;
+  el.dataset.i = i;
+  if (!L.FECHA.has(tok.s)) falaIn.append(' ');
+  falaIn.append(el);
+  podar();
+  if (origemRot && !reduzido) voar(origemRot.el, el);
+  else { el.classList.add('nova'); setTimeout(() => el.classList.remove('nova'), 900); }
+  return el;
+}
+function podar() {
+  // o que sai da janela é esquecido: some da tela também
+  while (falaIn.childNodes.length > 320) falaIn.removeChild(falaIn.firstChild);
+}
+function voar(de, para) {
+  const a = de.getBoundingClientRect(), b = para.getBoundingClientRect();
+  if (!a.width || !b.width) { para.classList.add('nova'); return; }
+  para.classList.add('oculta');
+  const f = document.createElement('span');
+  f.className = 'voa';
+  f.textContent = para.textContent;
+  f.style.color = getComputedStyle(para).color;
+  // parte do lugar da palavra no céu: sem transição até o ponto de partida estar
+  // fixado, senão ela sai voando do canto da tela
+  f.style.transition = 'none';
+  f.style.visibility = 'hidden';
+  document.body.append(f);
+  const h = f.offsetHeight;
+  f.style.transform = `translate(${a.left + 12}px,${a.top + a.height / 2 - h / 2}px) scale(.8)`;
+  f.style.visibility = '';
+  void f.offsetWidth;
+  f.style.transition = '';
+  f.style.transform = `translate(${b.left}px,${b.top + (b.height - h) / 2}px) scale(1)`;
+  const fim = () => { f.remove(); para.classList.remove('oculta'); para.classList.add('nova'); setTimeout(() => para.classList.remove('nova'), 900); };
+  f.addEventListener('transitionend', fim, { once: true });
+  setTimeout(() => { if (f.isConnected) fim(); }, 800);
+}
+
+// ——— as possíveis, no céu ———
+function mostrarPossiveis(d) {
+  const lista = d.cands.filter(g => g.prob >= 0.025).slice(0, 5);
+  while (rotulos.length < 5) {
+    const el = document.createElement('button');
+    el.className = 'cand';
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const r = rotulos.find(x => x.el === el);
+      if (r && r.g && (estado === 'sonhando') && fase === 'dizer') { escolhaJogador = r.g; tocou(); }
+    });
+    $('#rotulos').append(el);
+    rotulos.push({ el, g: null, x: 0, y: 0 });
+  }
+  rotulos.forEach((r, i) => {
+    const g = lista[i];
+    r.g = g || null;
+    if (!g) { r.el.style.opacity = '0'; r.el.tabIndex = -1; return; }
+    const tipo = g.corte ? 'corte' : (C.F[g.t] & 2) ? 'des' : 'lit';
+    r.el.className = 'cand ' + tipo;
+    r.el.tabIndex = 0;
+    const pal = g.corte ? t('cena') : g.s === '¶' ? '/' : g.s;
+    r.el.innerHTML = '';
+    r.el.append(pal);
+    const sm = document.createElement('small'); sm.textContent = (g.prob * 100 < 1 ? '<1' : Math.round(g.prob * 100)) + '%';
+    r.el.append(sm);
+    r.el.style.fontSize = (13 + 15 * Math.sqrt(g.prob)).toFixed(1) + 'px';
+    r.el.setAttribute('aria-label', `${pal} ${Math.round(g.prob * 100)}%`);
+    r.alvo = noite.posDe(g.t);
+    r.alfa = 0.4 + 0.6 * Math.sqrt(g.prob);
+    r.el.style.opacity = '0';
+    r.visivel = true;
+  });
+}
+function esconderPossiveis(manter) {
+  for (const r of rotulos) {
+    if (r === manter) continue;
+    r.visivel = false; r.el.style.opacity = '0'; r.el.tabIndex = -1;
+  }
+  if (manter) { manter.visivel = false; setTimeout(() => { manter.el.style.opacity = '0'; }, 60); }
+}
+function posicionarRotulos() {
+  const caixas = [];
+  for (const r of rotulos) {
+    if (!r.visivel || !r.alvo) continue;
+    const [x, y, w] = projetar(r.alvo[0], r.alvo[1], r.alvo[2]);
+    if (w <= 0.001 || x < -40 || x > W + 40 || y < -20 || y > H + 20) { r.el.style.opacity = '0'; continue; }
+    let yy = y - 8;
+    const alt = parseFloat(r.el.style.fontSize) * 1.1 + 14;
+    for (let k = 0; k < 4; k++) {                 // afasta rótulos que se sobrepõem
+      const bate = caixas.find(c => Math.abs(c.y - yy) < alt * 0.9 && Math.abs(c.x - x) < 90);
+      if (!bate) break;
+      yy = bate.y + alt;
+    }
+    caixas.push({ x, y: yy });
+    r.el.style.transform = `translate(${x.toFixed(1)}px,${yy.toFixed(1)}px)`;
+    r.el.style.opacity = String(r.alfa);
+  }
+}
+
+// ——— o desejo no céu: um anel, ou uma seta na borda se estiver fora da vista ———
+function posicionarAlvo() {
+  const el = $('#alvo');
+  if (!noite || !desejo || estado === 'abertura' || estado === 'diario') { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const W3 = noite.W;
+  const [x, y, w] = projetar(W3[0], W3[1], W3[2]);
+  const m = 34, topo = H < 560 ? 130 : 160, fundo = H - (W < 700 ? 230 : 200);
+  const dentro = w > 0 && x > m && x < W - m && y > topo && y < fundo;
+  if (dentro) {
+    el.classList.remove('borda');
+    el.classList.toggle('esq', x > W - 140);
+    el.style.transform = `translate(${x}px,${y}px)`;
+    el.querySelector('b').style.transform = '';
+  } else {
+    // direção do desejo no plano da câmera
+    const dx = W3[0] - cam.pos[0], dy = W3[1] - cam.pos[1], dz = W3[2] - cam.pos[2];
+    const cxv = dx * cam.x[0] + dy * cam.x[1] + dz * cam.x[2], cyv = dx * cam.y[0] + dy * cam.y[1] + dz * cam.y[2];
+    const ang = Math.atan2(-cyv, cxv);
+    const cx = W / 2, cy = (topo + fundo) / 2, rx = W / 2 - m, ry = (fundo - topo) / 2;
+    const k = 1 / Math.max(Math.abs(Math.cos(ang)) / rx, Math.abs(Math.sin(ang)) / Math.max(40, ry));
+    const bx = cx + Math.cos(ang) * k;
+    el.classList.add('borda');
+    el.classList.toggle('esq', bx > W / 2);
+    el.style.transform = `translate(${bx}px,${cy + Math.sin(ang) * k}px)`;
+    el.querySelector('b').style.transform = `rotate(${ang + Math.PI / 4}rad)`;
+  }
+}
+
+// ——— luzes do quadro ———
+function montarLuzes() {
+  nLuz = 0;
+  if (!noite || estado === 'abertura') return;
+  const P = C.P;
+  // o rastro: só o que ainda está na janela brilha; o resto já foi esquecido
+  const s = noite.saida, jan = 90, i0 = Math.max(0, s.length - jan);
+  let prev = null;
+  for (let i = estado === 'diario' ? 0 : i0; i < s.length; i++) {
+    const tt = s[i].t;
+    if (prev === tt) continue;
+    const idade = estado === 'diario' ? 0.6 : (i - i0) / jan;
+    const des = (C.F[tt] & 2) !== 0;
+    const x = P[3 * tt], y = P[3 * tt + 1], z = P[3 * tt + 2];
+    if (prev !== null) {
+      const px = P[3 * prev], py = P[3 * prev + 1], pz = P[3 * prev + 2];
+      const d = Math.hypot(x - px, y - py, z - pz), passos = Math.min(40, Math.ceil(d / 0.006));
+      for (let k = 1; k < passos; k++) {
+        const f = k / passos;
+        luz(px + (x - px) * f, py + (y - py) * f, pz + (z - pz) * f, des ? 1 : 0.55, des ? 0.8 : 0.72, des ? 0.5 : 1, 0.2 * idade, -2.5);
+      }
+    }
+    luz(x, y, z, des ? 1 : 0.6, des ? 0.78 : 0.75, des ? 0.45 : 1, 0.55 * idade + 0.1, 0.0035);
+    prev = tt;
+  }
+  // a voz de agora
+  const f = noite.fonte, pul = 0.75 + 0.25 * Math.sin(tempo * 3);
+  luz(P[3 * f], P[3 * f + 1], P[3 * f + 2], 0.9, 0.95, 1, 0.9 * pul, 0.009);
+  // as possíveis
+  for (const r of rotulos) {
+    if (!r.visivel || !r.alvo) continue;
+    const des = r.el.classList.contains('des');
+    luz(r.alvo[0], r.alvo[1], r.alvo[2], des ? 1 : 0.6, des ? 0.8 : 0.78, des ? 0.5 : 1, 0.5 * r.alfa, 0.0055);
+  }
+  // o desejo
+  const Wd = noite.W, pw = 0.8 + 0.2 * Math.sin(tempo * 1.7);
+  luz(Wd[0], Wd[1], Wd[2], 1, 0.74, 0.36, pw, -16);
+  luz(Wd[0], Wd[1], Wd[2], 1, 0.74, 0.36, 0.35 * pw, 0.03);
+}
+
+// ——— o fundo, a vigília e o fim ———
+function entrarNoFundo(marca) {
+  estado = 'profundo';
+  esconderPossiveis(null);
+  som.fundo(true);
+  mostrarAviso(t('semSonho'), t('perdidas', { n: 12 }), '', 3000);
+  const r = document.createElement('span'); r.className = 'reticencias'; r.textContent = ' … ';
+  falaIn.append(r);
+  const esta = noite;
+  setTimeout(() => {
+    som.fundo(false);
+    if (noite !== esta || estado !== 'profundo') return;    // acordou ou outra noite começou
+    for (let i = marca; i < noite.saida.length; i++) falar(noite.saida[i], i, null);
+    cam.alvoC = noite.posDe(noite.fonte);
+    if (noite.fim) { terminar(noite.fim); return; }
+    estado = 'sonhando'; fase = 'pensar'; proximoEm = performance.now() + 600;
+  }, reduzido ? 1800 : 3400);
+}
+
+let fimEm = 0;
+function terminar(fim) {
+  estado = 'fim';
+  esconderPossiveis(null);
+  fimEm = performance.now();
+  if (fim === 'chegou') {
+    const al = guarda.ler('alcancados', []);
+    if (!al.includes(desejo.t)) { al.push(desejo.t); guarda.gravar('alcancados', al); }
+    revelarDesejo();
+    desejoSpans.forEach(s => s.classList.remove('oculta'));
+    som.acorde([261.63, 329.63, 392, 493.88, 587.33], 0.03, 6);
+    mostrarAviso(t('fimChegou'), '', desejo.t, 3600);
+    flash(0.18, '#ffbe5c');
+  } else if (fim === 'acordou') {
+    som.ruido(1.2, 300, 6000, 0.08);
+    mostrarAviso(t('fimAcordou'), '', '', 2600);
+    flash(0.55, '#ffffff');
+  } else {
+    som.passaros();
+    mostrarAviso(t('fimAmanheceu'), '', '', 3000);
+  }
+  if (som.ctx) som.drone.gain.setTargetAtTime(fim === 'acordou' ? 0.0 : 0.06, som.ctx.currentTime, fim === 'acordou' ? 0.3 : 2);
+  setTimeout(() => {
+    // de volta para fora: o rastro inteiro vira uma constelação
+    cam.alvoC = [0, 0, 0]; cam.alvoD = 2.5; cam.w = 0.03;
+    abrirDiario(fim);
+  }, fim === 'chegou' ? 3800 : 2600);
+}
+function flash(forca, cor) {
+  const c = $('#clarao');
+  c.style.background = cor; c.style.transition = 'none'; c.style.opacity = String(forca);
+  requestAnimationFrame(() => { c.style.transition = 'opacity 1.4s ease'; c.style.opacity = '0'; });
+}
+
+let avisoTimer = 0;
+function mostrarAviso(a, b, c, ms) {
+  const el = $('#aviso');
+  el.querySelector('.t1').textContent = a || '';
+  el.querySelector('.t2').textContent = b || '';
+  el.querySelector('.t3').textContent = c || '';
+  el.classList.add('on');
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(() => el.classList.remove('on'), ms);
+}
+
+// ——— diário ———
+let contagemTimer = 0, contagemFim = 0;
+function abrirDiario(fim) {
+  estado = 'diario';
+  const lem = noite.lembranca(64);
+  const agora = new Date();
+  $('#diarioQuando').textContent = t('quando', { n: nNoite, data: agora.toLocaleDateString(lingua === 'pt' ? 'pt-BR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) });
+  $('#diarioTitulo').textContent = t(fim === 'chegou' ? 'tituloChegou' : fim === 'acordou' ? 'tituloAcordou' : 'tituloAmanheceu');
+  const p = $('#lembro'); p.innerHTML = '';
+  if (lem.fragmentos.length) {
+    const fr = document.createElement('span'); fr.className = 'frag';
+    fr.textContent = lem.fragmentos.join(' · ') + ' … ';
+    p.append(fr);
+  }
+  p.append(L.juntar(lem.fim, ' / ').replace(/^[\s/.,;:!?…]+/, ''));
+  const alcancou = fim === 'chegou';
+  const caminho = Math.round(100 * Math.max(0, Math.min(1, (noite.inicioDist - noite.maisPerto) / Math.max(1e-6, noite.inicioDist - noite.raio))));
+  $('#desejoFimRot').textContent = alcancou ? t('desejoAlcancado') : t('desejoLonge', { p: caminho });
+  const q = $('#desejoFim'); q.innerHTML = '';
+  q.append('“' + desejo.t + '”');
+  const ci = document.createElement('cite');
+  ci.textContent = t('deAlguem', { fonte: nomeFonte(desejo.fonte), ...mesAno(desejo.d) }) + ' · ' + t('chegadosAte', { n: num(guarda.ler('alcancados', []).length) });
+  q.append(ci);
+  const anos = [...noite.fontes].map(tt => Math.floor(C.D[tt] / 100));
+  const a0 = Math.min(...anos), a1 = Math.max(...anos);
+  const nums = [
+    [t('nPalavras'), num(noite.palavras)],
+    [t('nVozes'), num(noite.fontes.size)],
+    [t('nEmendas'), num(noite.saltos + noite.mudos + noite.cortes)],
+    [t('nAnos'), a0 === a1 ? String(a0) : `${a0}–${a1}`],
+  ];
+  const dl = $('#numeros'); dl.innerHTML = '';
+  for (const [k, v] of nums) {
+    const d = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd');
+    dt.textContent = k; dd.textContent = v; d.append(dt, dd); dl.append(d);
+  }
+  $('#inteiroBox').hidden = true; $('#bInteiro').setAttribute('aria-expanded', 'false');
+  $('#bCopiar').textContent = t('copiar');
+  $('#hud').hidden = true;
+  $('#diario').hidden = false;
+  $('#diario').scrollTop = 0;
+  $('#bDormir').focus({ preventScroll: true });
+  iniciarContagem();
+}
+function iniciarContagem() {
+  pararContagem();
+  contagemFim = performance.now() + 25000;
+  const passo = () => {
+    const s = Math.max(0, Math.ceil((contagemFim - performance.now()) / 1000));
+    const el = $('#contagem'); el.innerHTML = '';
+    el.append(t('proxima', { s }));
+    const b = document.createElement('button'); b.textContent = t('ficar'); b.addEventListener('click', pararContagem);
+    el.append(b);
+    if (s <= 0) { pararContagem(); novaNoite(); return; }
+    contagemTimer = setTimeout(passo, 500);
+  };
+  passo();
+}
+function pararContagem() { clearTimeout(contagemTimer); contagemTimer = 0; $('#contagem').innerHTML = ''; }
+
+function montarInteiro() {
+  const box = $('#inteiro'); box.innerHTML = '';
+  let voz = -1, idx = 0;
+  noite.saida.forEach((tok, i) => {
+    if (tok.s === '¶') { box.append(document.createElement('br')); return; }
+    if (tok.t !== voz) { idx++; voz = tok.t; }
+    const el = document.createElement('span');
+    el.className = 'pal ' + ((C.F[tok.t] & 2) ? 'des' : 'lit') + (idx % 2 ? ' a' : ' b') + (tok.tipo === 'salto' || tok.tipo === 'cena' ? ' emenda' : '');
+    el.textContent = tok.s; el.dataset.i = i;
+    if (!L.FECHA.has(tok.s) && box.lastChild && box.lastChild.nodeName !== 'BR') box.append(' ');
+    box.append(el);
+  });
+}
+
+// ——— de onde veio ———
+function abrirFicha(i) {
+  const tok = noite && noite.saida[i];
+  if (!tok || tok.p < 0) return;
+  const s = noite.saida;
+  // o trecho contínuo do mesmo relato que contém esta palavra
+  let a = i, b = i;
+  while (a > 0 && s[a - 1].t === tok.t && s[a - 1].p === s[a].p - 1) a--;
+  while (b < s.length - 1 && s[b + 1].t === tok.t && s[b + 1].p === s[b].p + 1) b++;
+  const texto = C.T[tok.t], ini = C.INI[tok.t];
+  const k0 = s[a].p - ini, k1 = s[b].p - ini;
+  const re = new RegExp(L.RE_TOKEN.source, 'gu');
+  let m, k = 0, c0 = -1, c1 = -1;
+  while ((m = re.exec(texto)) !== null) {
+    if (k === k0) c0 = m.index;
+    if (k === k1) { c1 = m.index + m[0].length; break; }
+    k++;
+  }
+  const p = $('#fichaTexto'); p.innerHTML = '';
+  if (c0 >= 0 && c1 > c0) {
+    p.append(texto.slice(0, c0));
+    const mk = document.createElement('mark'); mk.textContent = texto.slice(c0, c1); p.append(mk);
+    p.append(texto.slice(c1));
+  } else p.textContent = texto;
+  const des = (C.F[tok.t] & 2) !== 0;
+  const topo = $('#fichaTopo'); topo.innerHTML = '';
+  const bola = document.createElement('i'); bola.style.background = des ? 'var(--desejo)' : 'var(--sonho)';
+  const d = C.D[tok.t];
+  topo.append(bola, `${des ? t('fichaDes') : t('fichaLit')} · ${(C.F[tok.t] & 8) ? 'Bluesky' : 'Reddit'} · ${mesAno(d).mes} ${mesAno(d).ano}`);
+  $('#fichaNota').textContent = t('fichaNota');
+  $('#ficha').hidden = false;
+  if (estado === 'sonhando' && !pausado) alternarPausa(true);
+  requestAnimationFrame(() => { const mk = p.querySelector('mark'); if (mk) mk.scrollIntoView({ block: 'center' }); });
+}
+function fecharFicha() { $('#ficha').hidden = true; }
+
+// ——— controles ———
+function alternarPausa(forcar) {
+  pausado = typeof forcar === 'boolean' ? forcar : !pausado;
+  $('#bPausa').setAttribute('aria-pressed', String(pausado));
+  $('#bPausa').textContent = pausado ? t('continuar') : t('pausar');
+  if (!pausado && estado === 'sonhando' && fase === 'dizer') proximoEm = performance.now() + 250;
+}
+function mudarTemperatura(v) {
+  tempAuto = false; tempManual = Math.max(0.3, Math.min(1.6, v));
+  $('#tempAuto').setAttribute('aria-pressed', 'false');
+  $('#tempIn').value = tempManual;
+  $('#tempVal').textContent = dec(tempManual);
+}
+function tocou() { ultimoToque = performance.now(); if (contagemTimer) pararContagem(); }
+
+$('#bFechar').addEventListener('click', () => adormecer(true));
+$('#bComo').addEventListener('click', () => {
+  const m = $('#manifesto'), abrir = m.hidden;
+  m.hidden = !abrir; $('#bComo').setAttribute('aria-expanded', String(abrir));
+  if (abrir) m.scrollIntoView({ behavior: reduzido ? 'auto' : 'smooth', block: 'start' });
+});
+$('#bLingua').addEventListener('click', trocarLingua);
+$('#bLingua2').addEventListener('click', trocarLingua);
+$('#bPausa').addEventListener('click', () => { tocou(); alternarPausa(); });
+$('#bSom').addEventListener('click', () => {
+  if (!som.ctx) { som.ligado = true; guarda.gravar('som', true); som.iniciar(); } else som.alternar();
+  $('#bSom').setAttribute('aria-pressed', String(som.ligado));
+});
+addEventListener('pointerdown', () => { if (som.ligado && !som.ctx && estado !== 'abertura') som.iniciar(); }, true);
+$('#bAcordar').addEventListener('click', () => {
+  if (estado !== 'sonhando' && estado !== 'profundo' && estado !== 'adormecendo') return;
+  noite.fim = 'acordou'; terminar('acordou');
+});
+$('#tempIn').addEventListener('input', e => { tocou(); mudarTemperatura(parseFloat(e.target.value)); });
+$('#tempAuto').addEventListener('click', () => { tocou(); tempAuto = !tempAuto; $('#tempAuto').setAttribute('aria-pressed', String(tempAuto)); if (!tempAuto) tempManual = noite ? noite.T : 0.9; });
+$('#bDormir').addEventListener('click', () => { som.iniciar(); novaNoite(); });
+$('#bInteiro').addEventListener('click', () => {
+  tocou();
+  const box = $('#inteiroBox'), abrir = box.hidden;
+  if (abrir) montarInteiro();
+  box.hidden = !abrir; $('#bInteiro').setAttribute('aria-expanded', String(abrir));
+});
+$('#bCopiar').addEventListener('click', () => {
+  tocou();
+  const txt = L.juntar(noite.saida) + '\n\n' + t('assinatura', { v: noite.fontes.size });
+  const ok = () => { $('#bCopiar').textContent = t('copiado'); };
+  const falhou = () => { $('#bInteiro').click(); const r = document.createRange(); r.selectNodeContents($('#inteiro')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, falhou);
+  else falhou();
+});
+$('#fichaFechar').addEventListener('click', () => { fecharFicha(); if (pausado && estado === 'sonhando') alternarPausa(false); });
+$('#fala').addEventListener('click', e => { const el = e.target.closest('.pal'); if (el) { tocou(); abrirFicha(+el.dataset.i); } });
+$('#fala').style.pointerEvents = 'auto';
+$('#inteiro').addEventListener('click', e => { const el = e.target.closest('.pal'); if (el) { tocou(); abrirFicha(+el.dataset.i); } });
+$('#diario').addEventListener('pointerdown', tocou);
+$('#alvo').addEventListener('pointerdown', e => {
+  if (!$('#alvo').classList.contains('borda')) return;
+  e.stopPropagation(); tocou();
+  const W3 = noite.W, d = [W3[0] - cam.pos[0], W3[1] - cam.pos[1], W3[2] - cam.pos[2]], n = Math.hypot(...d);
+  atencao.ativa = true; atencao.dir = d.map(v => v / n); atencao.fixa = true;
+});
+
+// segurar no céu = olhar para lá
+cv.addEventListener('pointerdown', e => {
+  if (estado !== 'sonhando' && estado !== 'profundo' && estado !== 'adormecendo') return;
+  tocou();
+  atencao.ativa = true; atencao.fixa = false; atencao.x = e.clientX; atencao.y = e.clientY; atencao.desde = performance.now();
+  atencao.dir = raio(e.clientX, e.clientY);
+  try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ok */ }
+});
+cv.addEventListener('pointermove', e => {
+  paralaxe.ax = (e.clientX / W) * 2 - 1; paralaxe.ay = -((e.clientY / H) * 2 - 1);
+  if (atencao.ativa && !atencao.fixa) { atencao.x = e.clientX; atencao.y = e.clientY; atencao.dir = raio(e.clientX, e.clientY); }
+});
+const soltar = () => { atencao.ativa = false; };
+cv.addEventListener('pointerup', soltar); cv.addEventListener('pointercancel', soltar);
+addEventListener('pointerup', () => { if (atencao.fixa) soltar(); });
+
+addEventListener('keydown', e => {
+  if (e.target && (e.target.tagName === 'INPUT' && e.key !== 'Escape')) return;
+  if (estado === 'abertura') { if (e.key === 'Enter' && pronto && document.activeElement === document.body) adormecer(true); return; }
+  if (estado === 'diario') { tocou(); return; }
+  if (e.key === ' ') { e.preventDefault(); tocou(); alternarPausa(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); tocou(); mudarTemperatura((tempAuto ? noite.T : tempManual) + 0.05); }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); tocou(); mudarTemperatura((tempAuto ? noite.T : tempManual) - 0.05); }
+  else if (/^[1-5]$/.test(e.key) && fase === 'dizer' && estado === 'sonhando') {
+    const r = rotulos[+e.key - 1]; if (r && r.g && r.visivel) { tocou(); escolhaJogador = r.g; }
+  }
+  else if (e.key === 'Escape') { if (!$('#ficha').hidden) { fecharFicha(); if (pausado) alternarPausa(false); } }
+  else if (e.key === 'm' || e.key === 'M') { som.alternar(); $('#bSom').setAttribute('aria-pressed', String(som.ligado)); }
+});
+
+// ————————————————————————— o quadro —————————————————————————
+let ultimo = performance.now(), mediaQuadro = 16, medidos = 0;
+function quadro(agora) {
+  const dt = Math.min(0.05, (agora - ultimo) / 1000); ultimo = agora; tempo += dt;
+  // aparelho lento: menos estrelas (o céu é embaralhado, qualquer prefixo é amostra justa)
+  mediaQuadro += (dt * 1000 - mediaQuadro) * 0.05;
+  if (++medidos > 90 && mediaQuadro > 34 && nDesenho > 60000) { nDesenho = Math.round(nDesenho * 0.7); guarda.gravar('pontos', nDesenho); medidos = 0; }
+
+  if (estado === 'adormecendo' && agora >= proximoEm) { estado = 'sonhando'; proximoEm = agora + 200; fase = 'pensar'; }
+  if (estado === 'sonhando') {
+    if (fase === 'pensar' && agora >= proximoEm) pensar(agora);
+    else if (fase === 'dizer' && escolhaJogador) { const g = escolhaJogador; escolhaJogador = null; dizer(agora, g); }
+    else if (fase === 'dizer' && !pausado && agora >= proximoEm) dizer(agora, null);
+  }
+  // a agulha e o que ela faz com o mundo
+  if (noite) {
+    agulhaVis += (noite.agulha - agulhaVis) * (1 - Math.exp(-dt * 4));
+    const a = Math.max(-1, Math.min(1, agulhaVis));
+    $('#ponteiro').style.left = ((a + 1) * 50).toFixed(2) + '%';
+    $('#agulha').setAttribute('aria-valuenow', a.toFixed(2));
+    $('#zFundo').classList.toggle('perigo', a < -0.6); $('#zVigilia').classList.toggle('perigo', a > 0.6);
+    const alvoFundo = estado === 'profundo' ? 1 : Math.max(0, (-a - 0.35) / 0.65);
+    const alvoVig = Math.max(0, (a - 0.35) / 0.65);
+    vis.fundo += (alvoFundo - vis.fundo) * (1 - Math.exp(-dt * 2));
+    vis.inquieto += (alvoVig - vis.inquieto) * (1 - Math.exp(-dt * 2));
+    const alvoAurora = noite.fim === 'amanheceu' ? 1 : Math.max(0, (noite.palavras / noite.total - 0.62) / 0.38) * 0.7;
+    vis.aurora += (alvoAurora - vis.aurora) * (1 - Math.exp(-dt * 0.8));
+    $('#veuFundo').style.opacity = vis.fundo.toFixed(3);
+    $('#veuVigilia').style.opacity = vis.inquieto.toFixed(3);
+    $('#veuAurora').style.opacity = vis.aurora.toFixed(3);
+    if (estado === 'sonhando' && !pausado) { const T = noite.T; $('#tempVal').textContent = dec(T); if (tempAuto) $('#tempIn').value = T; }
+    if (som.ctx && estado === 'sonhando') {
+      if ((medidos & 15) === 0) som.clima((C.F[noite.fonte] & 2) !== 0, a, vis.aurora);
+    }
+    cam.alvoD = estado === 'diario' || estado === 'fim' && agora - fimEm > 2400 ? 2.5 : (0.1 + 0.018 * Math.sin(tempo * 0.35) + 0.05 * Math.max(0, a));
+  }
+  // o foco do olhar
+  const foco = $('#foco');
+  if (atencao.ativa && !atencao.fixa) { foco.classList.add('on'); foco.style.transform = `translate(${atencao.x}px,${atencao.y}px)`; }
+  else foco.classList.remove('on');
+
+  atualizarCamera(dt);
+  montarLuzes();
+  desenharCeu();
+  posicionarRotulos();
+  posicionarAlvo();
+  requestAnimationFrame(quadro);
+}
+
+// para quem quiser olhar por dentro, no console
+window.latente = { get noite() { return noite; }, get corpus() { return C; }, get estado() { return estado; } };
+
+// ——— começo ———
+aplicarLingua();
+$('#bSom').setAttribute('aria-pressed', String(som.ligado));
+requestAnimationFrame(quadro);
+carregar();
+})();
+</script>

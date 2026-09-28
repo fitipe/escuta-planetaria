@@ -1,0 +1,234 @@
+# Latente — os desejos de cada noite, escolhidos a mão (28/09/2026).
+#
+# Um por linha, como a pessoa escreveu. O preparar.py os acha no arquivo pelo
+# texto (sem caixa, acento nem espaço duplo), então sobrevivem a uma regeração
+# do planeta que mude a ordem dos pontos. O que não for achado é avisado e fica
+# de fora da noite, sem quebrar nada.
+#
+# Critério da escolha, lendo ~900 candidatos que o filtro deixou passar:
+#   fica   o desejo que se entende sozinho, sem o post a que respondia;
+#          terno, engraçado ou doído — os três tons do arquivo
+#   sai    o que depende de contexto ("esse", "ele", "hoje"), o que nomeia
+#          pessoa privada, o agressivo, o sexual, o de corpo/peso, e todo
+#          desejo de sumir, morrer ou se ferir — mesmo dito como piada
+# Os de sono estão aqui de propósito: a máquina que não dorme sonha até eles.
+
+# sono
+Meu sonho seria conseguir dormir antes das 4 mas nunca mais rolou
+Meu sonho é passar um dia TD dormindo
+meu sonho é ter uma rotina de sono saudável
+meu sonho é poder dormir 3 dias direto sem ninguém me perturbar com o ar condicionado congelando de frio
+meu sonho é ter 9/10h de sono todos os dias
+Meu sonho é conseguir dormir
+meu sonho e dormir q nem gente normal
+meu sonho era acordar e levantar rápido sem problemas, existir de manhã é muito difícil
+meu sonho é o meu filho me acordar depois das 8h
+Meu sonho é conseguir ter uma noite de sono revigorante
+meu sonho é não ter que acordar cedo nunca mais
+meu sonho é regular meu sono novamente
+meu sonho é acordar 11h no domingo
+meu sonho é poder dormir bem
+O meu sonho é fazer controlo de qualidade de longo curso numa fábrica de colchões.
+
+# sonho e pesadelo na mesma frase
+meu maior sonho e pior pesadelo é um filho
+meu sonho é um ser igual a minha mãe, mas meu pesadelo é ter um casamento igual ao dos meus pais
+meu maior sonho é ser efetivada e meu maior pesadelo é ser efetivada
+meu maior sonho é q as pessoas notem q eu exito mas meu pior pesadelo é q as pessoas notem q eu existo
+
+# lugares, casa
+Meu sonho é colocar fechadura de senha na minha casa para eu nunca mais ficar trancada nem do lado de dentro nem do de fora.
+meu sonho é juntar os casais de amigos e ir passar um fim de semana na roça, é pedir demais?
+Meu sonho de vida é morar na Noruega
+o meu sonho é provar o doce de leite na Argentina, espero realizar em breve
+meu sonho é me mudar para são paulo
+meu sonho é quando eu tiver minha casa montar uma biblioteca, onde poderei ter vários funkos, livros, HQs e tudo que eu gosto
+meu sonho é passar o natal em algum lugar em que as pessoas levem a sério e decorem a cidade inteira
+Meu sonho é ter um quarto só para mim 😭
+meu sonho é conhecer a Suíça 🇨🇭
+Meu sonho e ir morar sozinho e ter um quarto só pra fazer uma vila de Sylvanian
+meu sonho é morar só e num ambiente com a acústica boa
+meu sonho é sair de onde eu moro (a cidade no caso) e começar uma vida diferente e viver em paz
+meu sonho é ter um pé de manga daquelas que não tem caroço
+meu sonho é ter um pé de limão rosa no quintal pra fazer caipirinha quando for receber os amigos em casa
+Meu sonho é morar em um apartamentinho com piso de taco 🥹
+Meu sonho é morar em uma casa vitoriana antiga cheia de passagens secretas
+meu sonho é morar num lugar que eu possa ter completo silencio
+meu sonho é conhecer amsterdam
+Meu sonho é poder morar só e ter pazzz, paz , pazzz
+meu sonho é ter uma casa pra poder encher de decoração assim no halloween e enfeitar todinha pro natal
+meu sonho é me mudar do país e viver coisa nova
+meu sonho é comer bibimbap original naquela cumbucona
+
+# aprender, fazer
+meu sonho é fazer uma obra de arte tão boa q até o museu britânico tentaria roubar
+meu sonho é saber cantar será que tem como aprender
+meu sonho é passar na unicamp
+Meu sonho é fazer receitas iguais aos italianos, só que com o toque brasileiro de sempre melhorar tudo.
+Meu sonho é fazer faculdade, no momento eu tenho interesse em cursar programação, mas quem sabe eu vá pra outra área
+meu sonho é entender matemática
+Meu sonho é fazer uma pipoca doce decente que não queime, já fiz de tudo e sempre queima
+Meu sonho é brigar com alguém em outro idioma,acho muito chique
+Meu sonho é aprender a desenhar
+meu sonho é fazer um curso divertido
+meu sonho é trocar cartas de amor em francês ou russo
+meu sonho é aprender a ligar o forno
+meu sonho é conseguir terminar qualquer coisa da faculdade
+meu sonho é conseguir escrever um one shot
+meu sonho é aprender a tocar piano
+Meu sonho é aprender a tocar na flauta
+meu sonho é ser boa em algum esporte, juro
+meu sonho é aprender a andar de bike
+Meu sonho é fazer judô. Fiz por um mês, mas tive que parar por motivos maiores = falta de dinheiro.
+Meu sonho é publicar um livro, n sei se será possível
+Meu sonho é aprender a nadar
+Meu sonho é estudar o suficiente pra virar o meu próprio mecânico
+meu sonho é trabalhar na Coquetel selecionando as definições e dicas das palavras-cruzadas
+Meu sonho é curso de marcenaria e costura
+Meu sonho é que algum maluco abrisse aula de russo na Uerj.
+meu sonho é fazer uma ilustração tão famosa que os chineses roubem
+Meu sonho é programar Java de terno e gravata
+meu sonho era viver da dança
+meu sonho é aprender francês
+meu sonho é aprender a jogar altinha, alguém me ensina pfv
+Meu sonho era sair em escola de samba como destaque de chão ou na bateria
+meu sonho é ser veterinária, criar minha própria clínica e resgatar o máximo de animaizinhos em situação de rua
+
+# gente, afeto
+Meu sonho era ter uma boa saúde. Não queria mais nada da vida.
+meu sonho é alguém olhar pra mim e pensar “nossa que linda”
+meu sonho é casar e ter chuva de arroz
+meu sonho é conseguir me livrar dos traumas e conseguir gostar de alguém sem medo nenhum e sentir apenas borboletinhas no estômago
+meu sonho é ganhar um buquê dos meus amigos
+Meu sonho é ter alguém com o mesmo humor que eu
+meu sonho era voltar a uns meses atrás e fazer tudo diferente
+meu sonho é conhecer um garoto que me trate da forma que eu mereço , se importe cmg realmente e que demonstre oq sente por mim.
+meu sonho é ter uma melhor amiga 😭🥹
+meu sonho é ter uma relação boa com a minha mãe mas acho q é impossível.
+Meu sonho é ser dinda de alguém
+meu sonho é uma mulher que me ame.
+Meu sonho é ter o pique que a minha mãe tem logo cedo
+meu sonho é ter uma família. ❤️
+meu sonho era ter uma irmã mais nova
+meu sonho é viver um amor recíproco
+meu sonho é minha mae deixar pegar outro cachorro
+meu sonho é dormir todos os dias com uma pessoa com cheiro de fruta e pele macia
+meu sonho é tomar um café com bolo de chocolate na casa de quem tá lendo 🤗😊🤭🙊
+meu sonho é ter um milhão de filhos pra ter um milhão de amigos
+meu sonho é ouvir marisa monte enquanto danço com o amor da minha vida na sala de casa😭
+Meu sonho é ter pais q me compreendem e me apoiam aqueles q me abraçam e falam q vai ficar tudo bem
+Meu sonho e refazer meu caderninho de amizades
+Meu sonho é apresentar Totoro pra minha sobrinha 🩵
+meu sonho é ajudar a dar uma casa pra minha mãe aos 30
+meu sonho é evoluir com quem eu amo
+meu sonho era ser amado de novo.
+Meu sonho é q eu e todos os meus mutuals viremos uma grande familia feliz
+meu sonho é conseguir dar aos meus filhos a mesma educação que eu recebi
+meu sonho é ter uma filha com cachinhos
+
+# a si mesmo
+Meu sonho é saber como as outras pessoas me enxergam
+meu sonho era ter a coragem q eu tive ano passado
+meu sonho é conseguir voltar a ser uma pessoa não tímida
+Meu sonho era ser uma pessoa extrovertida 🥲
+meu sonho é conseguir ter amor próprio
+Meu sonho é ser feliz. LITERALMENTE! tenho muitos traumas na vida e só quero ser feliz.
+Meu sonho é fazer graduação sem o compromisso de ser alguém depois
+meu sonho é me tornar uma pessoa que eu goste de ser
+Meu sonho é ter um pouco de consistência e paz na minha vida
+meu sonho é saber o que cada pessoa pensou sobre mim.
+meu sonho é viver em um mundo onde as pessoas me chamem pelos pronomes certos
+meu sonho é ir no supermercado fazer uma compra do mês sem se preocupar com o preço e transicionar sem medo dos meus pais me expulsarem de casa
+meu sonho é pisar em casa e não me sentir mal
+meu sonho é ficar um dia inteiro sem pensar em nada e me preocupar com nada
+meu sonho é passar pelo menos um dia sem me estressar
+MEU SONHO é completar uma semana inteira com bom humor sem nenhum estresse
+meu sonho é completar uma semana com felicidade genuína
+Meu sonho e voltar a respirar como uma pessoa normal
+meu sonho era não ter pensamentos intrusivos
+meu sonho é passar um dia sem sentir dor nas costas
+meu sonho é parar de passar vergonha
+
+# coisas pequenas
+Meu sonho era tá em casa de bucho cheio e de baixo da coberta assistindo one piece. Mas eu tô na escola passando frio e fome
+meu sonho é conseguir beber 2l de água TODO SANTO DIA
+meu sonho é ficar rica e sair presenteando todo mundo
+meu sonho é um dia ser um idoso bem caquetico e/ou hipocondríaco pra ter uma grande coleção de remédios e poder ficar organizando em gavetas
+meu sonho é nunca mais receber uma mensagem sobre serviço
+Meu sonho é ter um pastor alemão já tenho até nome preparado
+Meu sonho era tomar um banho e deitar pra relaxar
+meu sonho é ganhar um buquê de flores 🥹
+meu sonho é ganhar minha flor preferida.
+meu sonho é ser rica o suficiente pra adotar vários cachorrinhos e gatos de rua
+Meu sonho é passar um domingo sem receber mensagem de trabalho
+meu sonho é me formar, casar, ter dois filhos, me mudar p goiânia e escutar sertanejo 24h por dia
+Meu sonho era ter daqueles mini projetores de estrela/galáxia
+meu sonho era ver um vídeo de 10min e aprender o conteúdo de 2 meses
+meu sonho é ganhar muito dinheiro pra fazer o que eu sempre quis, ou seja: nada
+meu sonho é alguém mandar errado  qualquer quantia no meu pix
+meu sonho é deletar o lattes
+meu  sonho  é  teletransportar  e  nunca mais  me  atrasar  ou  chegar muito  cedo
+Meu sonho é me casar pra minha entrada ser com a marcha imperial
+meu sonho é entrar em um clube de livro imagina sair pra uma cafeteria pra falar de livro, comer um bolinho, fofocar hmmm a vida seria bela
+meu sonho é ter um ar-condicionado no meu quarto
+meu sonho é gastar e o dinheiro ainda sobrar
+meu sonho e sentar pra trabalhar numa cadeira confortável
+meu sonho é ganhar cartinha e presente feito a mão 💔
+meu sonho é usar um terno bem ajustado
+meu sonho é casar com piano de tubo tocando
+meu sonho é que no docs possa cutucar igual no msn
+Meu sonho é trabalhar em uma cafeteria. É a minha vibe
+Meu sonho é ir num casamento onde a noiva diz não.. E foge com outro de moto.
+meu sonho é virar uma entidade onipresente de forma supérflua
+meu sonho é ter todos os livros do mundo a minha disposição pra ler a qualquer momento
+meu sonho é ter a sensação de jogar fortnite em 2017 de novo
+meu sonho é que toda inveja vire dinheiro
+meu sonho é colocar todos os meus broches e chaveiros na minha mochila da escola sem ser julgada
+meu sonho é ser um robô sem sentimentos
+meu sonho é receber um buque de girassóis
+meu sonho é ganhar dinheiro ouvindo música no meu quarto
+meu sonho é poder comer miojo todo dia
+meu sonho é me aposentar e vender dindin
+meu SONHO era ser um gatinho bem mimado
+Meu sonho é pintar meu cabelo, nem que seja só a franja, de azul
+meu sonho é recuperar o acesso ao meu e-mail
+Meu sonho é poder passar o dia de pijama com minha dog no meu colo enquanto enquanto trabalho
+Meu sonho é uma lente fotossensível, poder olhar o mundo de olhos bem abertos e não ser pega de surpresa por um choro ao feixe de sol.
+Meu sonho era ter uma árvore de Natal bem linda decorada até minha mãe fazer a gente desmontar. Meu nível de exigência caiu rapidinho
+Meu sonho é ganhar um buquê de livro
+meu sonho é comprar um kit festa sem ser pra um festa
+meu sonho é virar vereador de cidade pequena
+meu sonho é ter uma cafeteria
+Meu sonho era gostar de pimenta. Tolerar pimenta. Mas nunca consegui.
+meu sonho é criar uma sandalinha que salve muitas pessoas...
+Meu sonho era que me convidassem para falar mal de mim, eu tenho tanto a contribuir
+Meu sonho é ter dois cachorros e dois gatos
+meu sonho é desenhar ônibus no rio de janeiro
+meu sonho é ir num casamento pra comer bem de graça
+Meu sonho era crescer e ser a ✨moça q tira sangue✨
+meu sonho é ter um vestido de noiva mas sem precisar casar
+meu sonho é ter um gato preto rabudinho
+meu sonho é uma rede social sem likes, sem comentários, sem numero de seguidores a mostra
+meu sonho é chegar num ponto da minha vida em que eu nunca mais terei que escrever uma carta de motivação novamente
+Meu sonho era ter uma pelucia de borzoi da the dog com o nariz comicamente comprido
+meu sonho é saber como é a vida sem usar a internet bicho
+Meu sonho era ser uma garota com cabeça de TV 🥺❤️
+Meu sonho era trabalhar em uma biblioteca, muito aesthetic sim
+Meu sonho era ter uma black Friday de consulta médica.
+meu sonho é ter uma pelúcia do paddington :(
+meu sonho é tomar a vacina da dengue
+meu sonho é ser um daqueles espíritos das historias que tem poder absoluto mas só o usa para dar lição de moral pra gente tapada
+meu sonho é reencarnar como um gato mimado de uma mulher bem rica, solteira e sem filhos
+Meu sonho é conseguir tirar uma foto de família tendo 6 gatos.
+meu sonho era lembrar pra quem que eu emprestei meu torto arado
+Meu sonho é uma privada que não adormece as minhas pernas instantaneamente
+meu sonho é passar no concurso do banco do brasil e trabalhar na velocidade 0.5
+meu sonho é exalar teatro, artesanato, costura, pôr do sol e arte no geral
+meu sonho é ver um esquilo pessoalmente
+Meu sonho é que os protetores solares de qualidade se tornem baratos e em grande quantidade.
+Meu sonho é quando alguém me cumprimentar e falar “oi, tudo bem?”, eu responder “não”.
+meu sonho é ouvir a liniker com a orquestra de ouro preto
+meu sonho é estar na fase dos 20 e ir em todos os festivais de música
+Meu sonho é tirar 1 ano de férias
+Meu sonho é ter um setup roxinho bonitinho
+meu sonho é ganhar flores de aniversário
