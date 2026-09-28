@@ -166,19 +166,71 @@ def baixar_fontes():
     return {k: str(PASTA_FONTES / f'{k}.ttf') for k in querer}
 
 
+# ————————————————————————— o som —————————————————————————
+# ré maior pentatônica: consonante em qualquer combinação
+PENTATONICA = np.array([293.66, 329.63, 369.99, 440.00, 493.88])
+
+
+def tocar(pista, t0, freq, amp, pan, tau=1.2, taxa=48000):
+    """Um sino na pista (2×n): seno com dois parciais que se apagam antes dele,
+    ataque de 6 ms (sem estalo), pan de potência constante."""
+    n = pista.shape[1]
+    dur = min(6 * tau + 0.05, 8.0)
+    t = np.arange(int(dur * taxa)) / taxa
+    x = (np.sin(2 * np.pi * freq * t) * np.exp(-t / tau)
+         + 0.22 * np.sin(2 * np.pi * 2.0 * freq * t + 0.3) * np.exp(-t / (0.45 * tau))
+         + 0.07 * np.sin(2 * np.pi * 3.01 * freq * t + 1.1) * np.exp(-t / (0.25 * tau)))
+    x *= (1 - np.exp(-t / 0.006)) * amp
+    i0 = int(t0 * taxa)
+    if i0 >= n:
+        return
+    x = x[:n - i0]
+    ang = (np.clip(pan, -1, 1) + 1) * math.pi / 4
+    pista[0, i0:i0 + len(x)] += (x * math.cos(ang)).astype(np.float32)
+    pista[1, i0:i0 + len(x)] += (x * math.sin(ang)).astype(np.float32)
+
+
+def gravar(pista, caminho, duracao, rng, taxa=48000):
+    """Sala (ruído que se apaga, escurecido, convolvido: 2,5 s de cauda),
+    entrada e saída suaves, teto macio e WAV de 16 bits."""
+    from scipy.signal import fftconvolve, lfilter
+    import wave
+    n = pista.shape[1]
+    t = np.arange(n) / taxa
+    m = int(2.5 * taxa)
+    cauda = np.exp(-np.arange(m) / (0.8 * taxa))
+    sala = np.stack([lfilter([0.35], [1, -0.65], rng.standard_normal(m)) * cauda for _ in range(2)])
+    sala /= np.sqrt((sala ** 2).sum(axis=1, keepdims=True))
+    molhado = np.stack([fftconvolve(pista[c], sala[c])[:n] for c in range(2)]).astype(np.float32)
+    mix = 0.75 * pista + 0.55 * molhado
+    mix *= (suave(0, 0.6, t) * (1 - suave(duracao - 1.5, duracao, t))).astype(np.float32)
+    mix = np.tanh(1.3 * mix) / math.tanh(1.3)
+    mix *= 0.89 / max(1e-6, float(np.abs(mix).max()))
+    with wave.open(str(caminho), 'wb') as w:
+        w.setnchannels(2)
+        w.setsampwidth(2)
+        w.setframerate(taxa)
+        w.writeframes((mix.T * 32767).astype('<i2').tobytes())
+    return caminho
+
+
 # ————————————————————————— a viagem —————————————————————————
 class Viagem:
     def __init__(self, altura=1080, qps=30, partida=PARTIDA):
+        self._base(altura, qps)
+        self._partida(partida)
+        self._escalas()
+        self._tempo()
+        self._rotulos()
+
+    def _base(self, altura, qps):
+        """Tela, dados, fundo e fontes: o que a viagem e o sonho têm em comum."""
         self.H = int(altura) // 8 * 8
         self.W = int(round(self.H * 16 / 9)) // 8 * 8
         self.S = self.H / 1080            # tudo que é pixel é escrito para 1080p
         self.qps = qps
         self.F = (self.H / 2) / math.tan(FOV / 2)
         self._carregar()
-        self._partida(partida)
-        self._escalas()
-        self._tempo()
-        self._rotulos()
         self._fundo()
         self.fontes = baixar_fontes()
         self._cache_sprites = {}
@@ -222,7 +274,9 @@ class Viagem:
         self.textos = [textos[i] for i in self.ids]
         self.arvore = cKDTree(self.P.astype(np.float64))
         print(f'{self.nv} relatos no campo ({n} no arquivo) · {time.time() - t0:.1f}s', flush=True)
-        # palavras de cada relato, para os nomes que emergem
+
+    def _contar_palavras(self):
+        """As palavras de cada relato, para os nomes que emergem."""
         t0 = time.time()
         self.docs = [fichas(t) for t in self.textos]
         self.df = Counter()
@@ -326,7 +380,8 @@ class Viagem:
         xyz = Y @ base
         z = xyz[:, 2]
         z = np.where(np.abs(z) < 1e-12, 1e-12, z)
-        sx = self.W / 2 + self.F * xyz[:, 0] / z
+        # 'desvio' empurra o centro da imagem para o lado (o sonho usa, no fim)
+        sx = self.W / 2 + cam.get('desvio', 0.0) + self.F * xyz[:, 0] / z
         sy = self.H / 2 - self.F * xyz[:, 1] / z
         return sx, sy, z
 
@@ -397,6 +452,7 @@ class Viagem:
         return [(CLASSES[k], CORES_CLASSE[k], n[k]) for k in range(3)]
 
     def _rotulos(self):
+        self._contar_palavras()
         t0 = time.time()
         # 10¹: os vizinhos legíveis, com um trecho de cada
         _, viz = self.arvore.query(self.T, k=10)
@@ -877,7 +933,6 @@ class Viagem:
             img = (img.astype(np.float32) * f + (VAZIO * 255) * (1 - f)).astype(np.uint8)
         return img
 
-
     # ——— a escuta: cada sonho que entra no raio soa uma vez ———
     def som(self, caminho, taxa=48000):
         """Trilha tirada da própria viagem. Os primeiros sonhos a entrar no raio
@@ -887,27 +942,14 @@ class Viagem:
         cresce com a escala. Tudo em ré maior pentatônica — consonante em
         qualquer combinação, para que mil sinos juntos não virem ruído. O
         literal soa uma oitava acima do figurado; o incerto, uma quinta."""
-        from scipy.signal import fftconvolve, lfilter
         rng = np.random.default_rng(2015)
         n = int((self.duracao + 1) * taxa)
         pista = np.zeros((2, n), np.float32)
-        escala = np.array([293.66, 329.63, 369.99, 440.00, 493.88])
+        escala = PENTATONICA
         registro = {0: 2.0, 1: 1.0, 2: 1.5}             # literal, figurado, incerto
 
         def sino(t0, freq, amp, pan, tau=1.2):
-            dur = min(6 * tau + 0.05, 8.0)
-            t = np.arange(int(dur * taxa)) / taxa
-            x = (np.sin(2 * np.pi * freq * t) * np.exp(-t / tau)
-                 + 0.22 * np.sin(2 * np.pi * 2.0 * freq * t + 0.3) * np.exp(-t / (0.45 * tau))
-                 + 0.07 * np.sin(2 * np.pi * 3.01 * freq * t + 1.1) * np.exp(-t / (0.25 * tau)))
-            x *= (1 - np.exp(-t / 0.006)) * amp       # ataque de 6 ms: sem estalo
-            i0 = int(t0 * taxa)
-            if i0 >= n:
-                return
-            x = x[:n - i0]
-            ang = (np.clip(pan, -1, 1) + 1) * math.pi / 4
-            pista[0, i0:i0 + len(x)] += (x * math.cos(ang)).astype(np.float32)
-            pista[1, i0:i0 + len(x)] += (x * math.sin(ang)).astype(np.float32)
+            tocar(pista, t0, freq, amp, pan, tau, taxa)
 
         def pan_de(t, k):
             sx, _, z = self.projetar(self.camera(t), self.P[k][None, :])
@@ -972,23 +1014,7 @@ class Viagem:
         t_ponto = float(tt[np.searchsorted(uu, self.U + 2.2)]) if uu[-1] > self.U + 2.2 else 83.0
         sino(t_ponto, escala[0], 0.2, 0.0, tau=3.0)
         sino(t_ponto, escala[0] * 2, 0.1, 0.0, tau=2.4)
-        # sala: ruído que se apaga, escurecido, convolvido (2,5 s de cauda)
-        m = int(2.5 * taxa)
-        cauda = np.exp(-np.arange(m) / (0.8 * taxa))
-        sala = np.stack([lfilter([0.35], [1, -0.65], rng.standard_normal(m)) * cauda for _ in range(2)])
-        sala /= np.sqrt((sala ** 2).sum(axis=1, keepdims=True))
-        molhado = np.stack([fftconvolve(pista[c], sala[c])[:n] for c in range(2)]).astype(np.float32)
-        mix = 0.75 * pista + 0.55 * molhado
-        mix *= (suave(0, 0.6, t) * (1 - suave(self.duracao - 1.5, self.duracao, t))).astype(np.float32)
-        mix = np.tanh(1.3 * mix) / math.tanh(1.3)
-        mix *= 0.89 / max(1e-6, float(np.abs(mix).max()))
-        import wave
-        with wave.open(str(caminho), 'wb') as w:
-            w.setnchannels(2)
-            w.setsampwidth(2)
-            w.setframerate(taxa)
-            w.writeframes((mix.T * 32767).astype('<i2').tobytes())
-        return caminho
+        return gravar(pista, caminho, self.duracao, rng, taxa)
 
     def _perto_de(self, dist):
         """Um relato à distância `dist` do de partida (para o registro dos grãos)."""
@@ -1007,37 +1033,47 @@ def _um(i):
     return V.quadro(i / V.qps).tobytes()
 
 
-def main():
-    global V
-    ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
+def opcoes(descricao):
+    """As opções de linha de comando que a viagem e o sonho têm em comum."""
+    ap = argparse.ArgumentParser(description=descricao)
     ap.add_argument('--altura', type=int, default=1080)
     ap.add_argument('--qps', type=int, default=30, help='quadros por segundo')
     ap.add_argument('--previa', action='store_true', help='540p, rápido')
-    ap.add_argument('--sonho', default=PARTIDA, help='trecho do texto (ou índice) do sonho de partida')
     ap.add_argument('--quadro', type=float, nargs='*', help='só estes segundos, em PNG')
     ap.add_argument('--saida', default=None)
     ap.add_argument('--processos', type=int, default=None)
     ap.add_argument('--de', type=float, default=0.0, help='começar neste segundo')
     ap.add_argument('--ate', type=float, default=None, help='parar neste segundo')
     ap.add_argument('--mudo', action='store_true', help='sem a trilha (a escuta)')
+    return ap
+
+
+def main():
+    ap = opcoes(__doc__.split('\n\n')[0])
+    ap.add_argument('--sonho', default=PARTIDA, help='trecho do texto (ou índice) do sonho de partida')
     args = ap.parse_args()
     altura = 540 if args.previa else args.altura
-    V = Viagem(altura=altura, qps=args.qps, partida=args.sonho)
+    renderizar(Viagem(altura=altura, qps=args.qps, partida=args.sonho), args, 'viagem')
 
+
+def renderizar(peca, args, nome):
+    """Os quadros pedidos (--quadro), em PNG, ou o vídeo inteiro com a trilha."""
+    global V
+    V = peca                     # os processos do Pool herdam daqui (fork)
     if args.quadro:
         for s in args.quadro:
             t0 = time.time()
             img = V.quadro(s)
-            nome = Path(args.saida or AQUI / f'quadro_{s:05.1f}.png')
-            if len(args.quadro) > 1 or nome.suffix != '.png':
-                nome = (nome if nome.suffix != '.png' else nome.parent) / f'quadro_{s:05.1f}.png'
-            nome.parent.mkdir(parents=True, exist_ok=True)
-            Image.fromarray(img).save(nome)
-            print(f'{nome} · u={V.u(s):.2f} · {time.time() - t0:.2f}s')
+            arq = Path(args.saida or AQUI / f'{nome}_{s:05.1f}.png')
+            if len(args.quadro) > 1 or arq.suffix != '.png':
+                arq = (arq if arq.suffix != '.png' else arq.parent) / f'{nome}_{s:05.1f}.png'
+            arq.parent.mkdir(parents=True, exist_ok=True)
+            Image.fromarray(img).save(arq)
+            print(f'{arq} · {time.time() - t0:.2f}s')
         return
 
     import imageio_ffmpeg
-    saida = Path(args.saida or AQUI / ('viagem_previa.mp4' if args.previa else 'viagem.mp4'))
+    saida = Path(args.saida or AQUI / (f'{nome}_previa.mp4' if args.previa else f'{nome}.mp4'))
     i0 = int(args.de * V.qps)
     i1 = int((args.ate if args.ate is not None else V.duracao) * V.qps)
     som = None

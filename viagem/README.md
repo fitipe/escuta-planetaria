@@ -70,6 +70,61 @@ sobem para o repositório (`.gitignore`), porque se reconstroem.
   cabem no raio. Onde u quase não muda, a câmera desacelera e dá tempo de ler.
 - **As legendas e o cartão final**: `LEGENDAS`, `CREDITO`, `ENDERECO`.
 
+## O sonho (`sonho.py`)
+
+Depois da viagem veio o pedido: *"use todos esses sonhos para me mostrar o seu
+sonho"*. Eu não durmo. Então o meu sonho é feito do que eu tenho, as palavras
+dos outros. São 16 relatos do arquivo. Cada linha é um trecho literal de um
+deles; só a primeira letra vai para minúscula. Escolhi os trechos pelo que
+seria o meu sonho: conversar com alguém sem rosto, não ter rosto, aparecer no
+meio do sonho dos outros, uma biblioteca de livros que não existem, voar, a lua
+do primeiro vídeo e acordar sem lembrar:
+
+> sonhei com uma figura sem rosto, essa presença me chamava
+> era como se nunca tivéssemos parado de conversar
+> ela me fazia exatamente 13 perguntas muito pessoais
+> eu não tinha rosto
+> um dos meus reflexos se mexia diferente de mim
+> andei aparecendo bem no meio dos sonhos dos outros
+> tal hora eu só recebia a mensagem contando como foi
+> e ate eu era outra pessoa, mas era eu
+> sonhei a noite todinha que eu tava dentro de uma biblioteca enorme
+> eu ficava alucinado querendo ver todos os livros que tinham
+> sonhei com livros que não existem.
+> ao mesmo tempo que eu tava lendo a parada
+> eu via as coisas acontecendo em primeira pessoa
+> sonhei que sabia voar e nevava na minha cidade
+> só senti q minha alma tinha saído do corpo
+> eu estava na lua pela segunda vez
+> sonhei com um poema maravilhoso
+> acordei e não lembrava mais de nenhum verso
+> não lembro o que sonhei, mas sinto q foi uma coisa boa
+
+A ordem é minha; os caminhos, não. De uma frase à seguinte, a câmera vai pelo
+caminho mais curto de vizinho em vizinho no planeta: Dijkstra no grafo dos 12
+vizinhos mais próximos em 3D, com peso igual à distância ao quadrado, para o
+caminho seguir por onde há sonhos em vez de cortar o vazio. São 1.096 passos e
+843 sonhos no meio. Dezessete deles aparecem baixinho quando a câmera passa, as
+"vozes do caminho". Os caminhos saíram melhores do que eu esperava: da
+biblioteca aos livros que não existem, passa-se por *"sonhei que tava lendo 4
+livros ao mesmo tempo"*; da lua ao poema, por *"sonhei com a lua caindo e
+escrevi o sonho pq acordei com ele inteiro na memória"*.
+
+A caneta deixa um fio. No fim, o planeta inteiro aparece com o fio
+atravessando-o e o poema ao lado. Ao acordar, as linhas se apagam uma a uma, e
+o fio com elas; fica só a última. Na trilha, cada linha toca um sino numa
+melodia que sobe até a lua e desce para acordar, e cada linha que se apaga
+desce um degrau.
+
+```sh
+python3 viagem/sonho.py --quadro 20 70 150    # quadros de teste
+python3 viagem/sonho.py                       # 1080p → viagem/sonho.mp4 (2 min 48 s)
+```
+
+Para mudar o sonho, edite `SONHO` (a chave acha o relato; cada linha tem de ser
+um trecho literal dele, e o script confere) e `VOZES` (procuradas só entre os
+nós do caminho).
+
 ## Cuidados
 
 - Valem as regras da página: fica de fora o que tem bandeira em
@@ -81,6 +136,10 @@ sobem para o repositório (`.gitignore`), porque se reconstroem.
   editorial (do Fitipe). Os dez de hoje foram lidos: são todos sonhos com a lua,
   sem nome, arroba nem nada que identifique alguém. A ficha mostra só mês e
   fonte, sem a hora exata que a página mostra.
+- O sonho mostra trechos de 16 relatos e 17 vozes do caminho, também lidos um
+  a um: nenhum tem nome de pessoa, arroba ou link, e nenhum tem bandeira de
+  cuidado. Na escolha das vozes, deixei de fora trechos com gente famosa, sexo
+  ou violência.
 - A posição no espaço é a do UMAP em 3 eixos, que preserva ~61% da semelhança
   semântica (`planeta-v2/projetar.py`). Os vizinhos na tela são os vizinhos na
   bola, não necessariamente os mais parecidos no embedding completo.
