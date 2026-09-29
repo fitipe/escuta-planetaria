@@ -104,3 +104,44 @@ as reconhece.
 **Tudo que está em `rubrica/pendente-v3.3.md`** — o quarto quadrante da carga, o
 `estranha`, os valores que faltam no `despertar`, a recorrência de figura, as
 espécies de atribuição, o jogo do bicho, o celebratório.
+
+---
+
+## No arquipélago (o jogo, `arquipelago/`)
+
+**O que o planeta já deixa de fora** — propaganda (camada 3) e os índices do
+`cuidado.json` — fica fora das ilhas também: na geração e de novo na página,
+que relê o `cuidado.json` do planeta enquanto ele for o mesmo de que as ilhas
+saíram.
+→ **Correto, não voltar.**
+
+**Só uma amostra vira gente.** Cada ilha tem de 5 a 12 moradores, e cada um é
+um sonho: 2.666 dos 444.591. Metade são os mais centrais do aglomerado, metade
+ao acaso; texto repetido entra uma vez. Os outros contam no tamanho da ilha,
+mas não aparecem.
+→ **Por desenho**: é um jogo, não o arquivo — quem quer tudo tem o planeta.
+
+**Nem todo morador tem um pedido.** A missão liga duas pessoas cujos sonhos
+têm a mesma *coisa* ("o show", "o sapo"); 1.511 das 2.666 têm com quem se
+ligar. Palavra que não é coisa (adjetivo antes do nome, "ao invés de",
+"o quão"), xingamento e violência crua (tiro, facada, surra) não viram
+pedido — o sonho aparece inteiro quando a pessoa conta, mas o jogo não manda
+ninguém atrás disso.
+→ Menor, registrado. As listas estão no `gerar.py` (`NAO_E_COISA`, `FEIO`).
+
+**Nomes de gente saem em minúscula nos pedidos.** "sonhou com o jungkook":
+a regra que reconhece nome próprio (maiúscula no meio da frase) não separa
+bem ídolo de substantivo comum no Twitter, onde quase tudo é minúsculo.
+Siglas sem vogal saem em maiúscula (BTS, BBB).
+→ Menor, registrado.
+
+**Relatos muito curtos ou muito longos só entram se faltar.** A amostra
+prefere de 25 a 1.100 caracteres; os longos, quando entram, vão cortados.
+→ Menor, registrado.
+
+**O sonho de quem joga não passa pelo embedding.** O bge-m3 não roda no
+navegador: a ilha nasce onde as *palavras* do sonho são características, não
+onde o vetor dele cairia. Sonho sem palavra em comum com o arquivo nasce longe
+de todas.
+→ **Voltar se** couber um embedder pequeno na página. Um serviço próprio
+resolveria, mas aí o sonho sairia do navegador — e hoje a promessa é que não sai.
