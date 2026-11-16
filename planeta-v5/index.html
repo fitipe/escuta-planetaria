@@ -2738,7 +2738,7 @@ function renderTexto(el, d, k, i){
     const [ini, fim, quem, forma, data, portao, semPeso, niv] = pt;
     const np = nPal(texto.slice(ini, fim));
     return `<span class="parte${semPeso ? ' sp' : ''}" style="margin-left:${Math.min(niv, 4) * 14}px">`
-      + `<span class="pcab"><b>${esc(quem)}</b> · ${esc(forma)}${data ? ' · ' + esc(data) : ''} · ${np} palavras${nQuem[quem] > 1 ? ` <small title="soma das mensagens desta pessoa no ponto (a régua soma as mensagens do autor)">(${palQuem[quem]} somando as de ${esc(quem)})</small>` : ''}`
+      + `<span class="pcab"><b>${esc(quem)}</b> · ${esc(forma)}${data ? ' · ' + esc(data) : ''} · ${np} palavras${nQuem[quem] > 1 ? ` <small title="soma das mensagens desta pessoa no ponto">(${palQuem[quem]} somando as de ${esc(quem)})</small>` : ''}`
       + `${portao ? ` <span class="ptag" title="${semPeso ? 'não entra na posição do ponto (só as partes de sonho dormido da população pesam)' : 'entra na posição do ponto'}">${esc(portao)}</span>` : ''}</span>`
       + `<span class="ptx">${pintarTrecho(texto.slice(ini, fim), gs.filter(g => g.p === q))}</span></span>`;
   }).join('') + (P.length && P[P.length - 1][1] < texto.length ? '' : '');
@@ -2794,15 +2794,10 @@ function fecharGpop(){ const p = document.getElementById('gpop'); if (p) p.remov
 function abrirGpop(ev, ids){
   fecharGpop();
   const box = document.createElement('div'); box.id = 'gpop';
-  box.innerHTML = '<button class="x" title="fechar">×</button>' + ids.map(n => {
-    const g = GRIF_VIS[n]; if (!g) return '';
-    const notas = [g.est & 1 ? 'grifo estendido até a palavra inteira (o trecho de origem cortava a palavra)' : '',
-                   g.est & 2 ? 'o trecho não está na parte de origem; achado em outra parte da conversa' : '',
-                   g.est & 4 ? 'o trecho aparece mais de uma vez nesta parte; grifada a primeira em palavra inteira' : ''].filter(Boolean);
-    return `<div class="gi"><div><i class="sw" style="background:${EIXO_COR[g.eixo] || '#ccc'}"></i><b>${esc(EIXO_ROT[g.eixo] || g.eixo)}</b>`
-      + ` · ${g.tipo !== 'prof' ? 'palpite' : esc(g.val)}</div><div>${quemTxt(g)}</div><div class="med">${medidaTxt(g)}</div>`
-      + (notas.length ? `<div class="nota">${notas.join('<br>')}</div>` : '') + '</div>';
-  }).join('');
+  // V5 pública: o clique mostra só o tipo do grifo
+  const tipos = [...new Set(ids.map(n => GRIF_VIS[n] && GRIF_VIS[n].eixo).filter(Boolean))];
+  box.innerHTML = '<button class="x" title="fechar">×</button>' + tipos.map(e =>
+    `<div class="gi"><div><i class="sw" style="background:${EIXO_COR[e] || '#ccc'}"></i><b>${esc(EIXO_ROT[e] || e)}</b></div></div>`).join('');
   rel.appendChild(box);
   const r = rel.getBoundingClientRect();
   box.style.left = Math.max(8, Math.min(ev.clientX - r.left - 20, r.width - 300)) + 'px';
@@ -2821,13 +2816,7 @@ function grifosLista(i){
   const fora = todos.filter(g => g.a < 0), eixos = {};
   for (const g of todos) if (g.a >= 0 && GVER[g.tipo]) eixos[g.eixo] = (eixos[g.eixo] || 0) + 1;
   let h = '<div class="grifos">';
-  if (prof.length) h += `<label><input type="checkbox" ${GVER.prof ? 'checked' : ''} onchange="verGrif('prof', this.checked)"> <b>professor</b></label>`;
-  if (al.length) h += `<label><input type="checkbox" ${GVER.al ? 'checked' : ''} onchange="verGrif('al', this.checked)"> <b>alunos antigos (29/10–01/11)</b></label>`;
-  if (c3.length) h += `<label><input type="checkbox" ${GVER.c3 ? 'checked' : ''} onchange="verGrif('c3', this.checked)"> <b>alunos novos</b></label>`;
-  h += `<div class="gleg"><span class="ls" style="border-bottom:2px solid #aab">professor</span> <span class="ls" style="border-bottom:2px dashed #aab">professor, “talvez”</span>`
-     + ` <span class="ls" style="border-bottom:2px dotted #aab">aluno antigo (palpite)</span>${c3.length ? ' <span class="ls" style="border-bottom:4px double #aab">aluno novo (palpite)</span>' : ''} · clique no grifo para ver quem marcou e a medida</div>`;
   h += '<div class="gleg">' + Object.entries(eixos).map(([e, n]) => `<span><i class="sw" style="background:${EIXO_COR[e] || '#ccc'}"></i>${esc(EIXO_ROT[e] || e)} <small>${n}</small></span>`).join(' ') + '</div>';
-  if (fora.length) h += `<small>${fora.length} trecho${fora.length > 1 ? 's' : ''} fora deste ponto, não pintado${fora.length > 1 ? 's' : ''}: o aluno lia também a raiz, o pai e a continuação da conversa, e marcou ali; o professor às vezes reescreve o trecho em vez de copiar</small>`;
   return h + '</div>';
 }
 function leituraPalpite(i, cargas){
@@ -2866,7 +2855,7 @@ function mostrar(i, daBusca){
   if (SENSIVEL.has(i))
     marcs.push(`<b class="sensivel" title="a pessoa conta um ato violento sonhado e, acordada, aprova ou celebra (“acordei leve”). Ninguém em perigo: fica no arquivo, com este aviso. Relatos com risco real ficam fora da página.">conteúdo sensível · violência sonhada endossada ao acordar</b>`);
   // estimativa do modelo, não certeza — fica no título, a leitura vem embaixo
-  const est = `estimativa do aluno: literal ${P_LIT[i]}% · figurado ${P_FIG[i]}%`;
+  const est = `estimativa automática: literal ${P_LIT[i]}% · figurado ${P_FIG[i]}%`;
   const qs = META.qualidades.filter((q,j)=> b & (1<<(3+j))).map(q=>QUAL_ROT[q]);
   const mes = String(MES[i]).padStart(2,'0');
   const fm = formaDe(i);
@@ -3230,8 +3219,8 @@ function montarFotoInfo(){
        + `<td>${pt(r.AeB_piso)}</td><td>${pt(r.AuB_piso)}–${pt(r.AuB_teto)}</td></tr>`;
   // 16/11 (reorg): um parágrafo simples no topo; o texto técnico inteiro, sem mudar número, em "detalhes técnicos"
   const simples = `<p>Cada ponto é uma conversa (um post com as respostas) ou um texto solto; relato é cada texto de sonho dentro dela; pessoas são os autores distintos. `
-    + `As classificações vêm dos trechos que modelos-alunos grifaram em cada conversa, agrupados por sentido e nomeados por leitores automáticos. `
-    + `É uma prova de método: leia os números como ordem de grandeza.</p>`;
+    + `As classificações vêm dos trechos marcados automaticamente em cada conversa, agrupados por sentido e depois nomeados. `
+    + `É um método em teste: leia os números como ordem de grandeza.</p>`;
   // 16/11 (reorg 2): o parágrafo abre "como ler"; o técnico, inteiro, no "detalhes técnicos" de lá
   $('#comoSimples').innerHTML = simples;
   $('#fotoTxt').innerHTML = h + '</table><div id="taxasFaixas"></div>';
@@ -3752,14 +3741,14 @@ function grPintar(){
     if (b && bx.scrollWidth > bx.clientWidth) bx.scrollLeft = Math.max(0, b.offsetLeft - bx.offsetLeft - 24); }
   $('#grCab').innerHTML = `<div class="tit">${esc(e.titulo || e.rot)}</div>`
     + `<div><b>${fmtN(e.p)}</b> pessoas · ${fmtN(e.c)} conversas com algum valor`
-    + (typeof e.prec === 'number' ? ` · trechos certos ≈ ${Math.round(e.prec * 100)}%` : '') + `</div>`
+    + `</div>`
     + (e.aviso ? `<div class="aviso">${esc(e.aviso)}</div>` : '');
   $('#grComoTxt').innerHTML = grComoTexto(d);
   grPintarSel(); grPintarLista();
 }
 // o "como ler" dos grifos: na aba e, igual, em "como ler" (D)
 function grComoTexto(d){
-  return `Os nomes vêm dos trechos que os modelos-alunos grifaram em cada conversa, agrupados por sentido e nomeados por leitores automáticos. É uma prova de método: leia os números como ordem de grandeza. Uma conversa sem valor numa pergunta não quer dizer que aquilo falte no sonho, só que nada foi nomeado ali. Valores com menos de ${fmtN(d.minp)} pessoas não aparecem. <b>Pessoas</b> são autores distintos; <b>conversas</b> são pontos do planeta. <b>Trechos certos</b> é a parte dos grifos daquela pergunta que a conferência julgou certa.`
+  return `Os nomes vêm dos trechos marcados automaticamente em cada conversa, agrupados por sentido e depois nomeados. É um método em teste: leia os números como ordem de grandeza. Uma conversa sem valor numa pergunta não quer dizer que aquilo falte no sonho, só que nada foi nomeado ali. Valores com menos de ${fmtN(d.minp)} pessoas não aparecem. <b>Pessoas</b> são autores distintos; <b>conversas</b> são pontos do planeta.`
     + (d.previa ? ' <b>Prévia:</b> os números ainda vão mudar.' : '');
 }
 // 16/11 (reorg 2): B segue A — "sonho dormido" mostra os eixos sem fig; "desejo ou fala", os fig; "tudo", todos
