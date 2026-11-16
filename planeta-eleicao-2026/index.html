@@ -506,6 +506,9 @@
   #arranjarPor{display:none!important}   /* V5: sempre o arranjo pelo texto inteiro */
   /* nuvem só do período: uma vista só */
   #modos button.pri, #arranjarPor, #grEixos .rotE, #marcadores{display:none!important}
+  #elBtn{background:transparent;border:1px solid var(--linha);border-radius:3px;padding:5px 9px;color:var(--texto);font:inherit;font-size:11px;cursor:pointer}
+  #modos #elBtn.on{background:#e9ebf5!important;color:#06070d!important;border-color:#e9ebf5!important}
+  #elBtn small{font-size:9px;opacity:.7;margin-left:4px}
 </style>
 
 <canvas id="ceu"></canvas>
@@ -513,7 +516,7 @@
   <h1>Sonhos da eleição de 2026</h1>
   <!-- Fitipe (28/09): só o total, que acompanha o arranjo (todos, literal…) -->
   <p><b id="total">—</b> conversas</p>
-  <p class="def">sonhos contados de 16/08 a 01/11/2026, no Bluesky e no Reddit · ponto = uma conversa ou um texto solto · pessoas = autores distintos</p>
+  <p class="def">sonhos contados de 16/08 a 01/11/2026, no Bluesky, no X, no Reddit e no Instagram · ponto = uma conversa ou um texto solto · pessoas = autores distintos</p>
   <!-- 16/11 (reorg 2): D "posso confiar?" — um lugar só, recolhido; no celular vai para o menu (medir) -->
   <button id="comoBtn" class="caixa" aria-expanded="false">como ler <span id="comoAceso"></span><b>▾</b></button>
 </header>
@@ -534,6 +537,7 @@
      sempre; os outros reprojetam cada classe só com os próprios pontos
      (projetar_classes.py) e a placa desliza de um para outro. -->
 <nav id="modos" aria-label="arranjo do planeta">
+  <div class="linha"><button id="elBtn" title="acende só as conversas em que o sonho fala da eleição às claras (leitura automática)">explicitamente eleitorais <small id="elN"></small></button></div>
   <!-- 16/11 (reorg 2): A "o que estou vendo?" — três escolhas; "sonho dormido" abre "arranjar por" -->
   <div class="linha" id="escolhas">
   <button class="pri on" data-a="todos" data-c="todos">tudo<small class="nA"></small></button>
@@ -2609,7 +2613,7 @@ const NOME = {
   desconhecido:'desconhecido', heranca:'herança',
 };
 const nome = c => NOME[c] || String(c).replace(/_/g,' ');
-const FORMA_ROT = ['post', 'comentário', 'continuação', 'bluesky não verificado'];
+const FORMA_ROT = ['post', 'comentário', 'continuação', 'post ou resposta (não verificado)'];
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 
 // Uma etiqueta clicável: se há chip com essa classe na leitura, clicar nela
@@ -3220,7 +3224,7 @@ function montarFotoInfo(){
     h += `<tr><td>${esc(nome(e))}</td><td>${pt(r.A_piso)}–${pt(r.A_teto)}</td><td>${pt(r.B_piso)}–${pt(r.B_teto)}</td>`
        + `<td>${pt(r.AeB_piso)}</td><td>${pt(r.AuB_piso)}–${pt(r.AuB_teto)}</td></tr>`;
   // 16/11 (reorg): um parágrafo simples no topo; o texto técnico inteiro, sem mudar número, em "detalhes técnicos"
-  const simples = `<p>Esta nuvem tem só os relatos de sonho dormido publicados entre 16/08/2026 (início da campanha) e 01/11/2026 (uma semana depois do segundo turno), no Bluesky e no Reddit. A coleta mudou de método ao longo do período: compare proporções, não o volume de um dia com outro. Cada ponto é uma conversa (um post com as respostas) ou um texto solto; pessoas são os autores distintos. `
+  const simples = `<p>Esta nuvem tem só os relatos de sonho dormido publicados entre 16/08/2026 (início da campanha) e 01/11/2026 (uma semana depois do segundo turno), no Bluesky, no X, no Reddit e no Instagram. A coleta mudou de método ao longo do período: compare proporções, não o volume de um dia com outro. Cada ponto é uma conversa (um post com as respostas) ou um texto solto; pessoas são os autores distintos. `
     + `As classificações vêm dos trechos marcados automaticamente em cada conversa, agrupados por sentido e depois nomeados. `
     + `É um método em teste: leia os números como ordem de grandeza.</p>`;
   // 16/11 (reorg 2): o parágrafo abre "como ler"; o técnico, inteiro, no "detalhes técnicos" de lá
@@ -3852,6 +3856,13 @@ carregar().catch(e => {
                  + '\n\nrecarregue a página.';
 });
 </script>
-<script>/* V5: fontes retiradas da versão pública não aparecem na lista */
-setInterval(() => document.querySelectorAll('#fontesLista .grupo').forEach(g => { const c = g.firstElementChild; const t = c && [...c.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent.trim()).join(''); if (t === 'x' || t === 'instagram') g.style.display = 'none'; }), 1200);
+<script>/* botão "explicitamente eleitorais": escolhe esse valor na pergunta Eleição (mesmo caminho do clique num valor da ficha) */
+(function(){
+  const b = document.getElementById('elBtn'); let ei = -1, vi = -1;
+  const achar = () => { if (!GV.d) return false; ei = GV.d.eixos.findIndex(e => e.k === 'eleicao'); vi = ei < 0 ? -1 : GV.d.eixos[ei].vals.findIndex(v => v.n === 'explicitamente eleitorais'); return vi >= 0; };
+  const pintar = () => { if (vi >= 0){ b.classList.toggle('on', GV.selE === ei && GV.sel.has('v' + vi)); document.getElementById('elN').textContent = GV.d.eixos[ei].vals[vi].c.toLocaleString('pt-BR'); } };
+  b.onclick = async () => { try { await grCarregar(); } catch (_) { return; } if (!achar()) return; await grEscolherDaFicha(ei, vi); pintar(); };
+  (function espera(){ if (typeof N === 'undefined' || !N || typeof grCarregar !== 'function') return setTimeout(espera, 400); grCarregar().then(() => { achar(); pintar(); }).catch(() => {}); })();
+  setInterval(() => { if (typeof GV !== 'undefined' && GV.d && vi >= 0) pintar(); }, 800);
+})();
 </script>
