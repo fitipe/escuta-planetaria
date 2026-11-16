@@ -2004,9 +2004,9 @@ function projetarExp(i, base, m, foc){
 function lerNaMira(){
   sincronizarRio();
   const base = baseCamera(), m = MAT, foc = Math.min(W,H) * 0.9;
-  let melhor = -1, nota = Infinity;
+  let melhor = -1, nota = Infinity; const soAc = veuOn();
   for (let i=0;i<N;i++){
-    if (!VIS[i]) continue;
+    if (!VIS[i] || (soAc && !aceso(i))) continue;
     const p = projetarExp(i, base, m, foc);
     if (!p) continue;
     const dx = p[0]-W/2, dy = p[1]-H/2, r2 = dx*dx + dy*dy;
@@ -2572,9 +2572,9 @@ function tocar(mx,my){
   sincronizarRio();
   const tol = Math.max(14, Math.min(34, 14 * Math.sqrt(Math.max(1, zoom/3))));
   const tol2 = tol*tol, alc = alcance();
-  let melhor=-1, melhorNota=-9;
+  let melhor=-1, melhorNota=-9; const soAc = veuOn();   // com filtro ou busca ligados, o clique só abre ponto aceso
   for (let i=0;i<N;i++){
-    if (!visivel(i)) continue;
+    if (!visivel(i) || (soAc && !aceso(i))) continue;
     const p = proj(i);
     const d = (p.sx-mx)**2 + (p.sy-my)**2;
     if (d > tol2) continue;
