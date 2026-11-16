@@ -2438,8 +2438,9 @@ function escolherSob(mx, my){
   sincronizarRio();
   const tol2 = Math.pow(Math.max(34, Math.min(W,H)*0.11), 2);
   let melhor = -1, melhorNota = 1e18;
+  const soAcesos = veuOn();   // com filtro ou busca ligados, o clique só pega ponto aceso
   for (let i=0;i<N;i++){
-    if (!VIS[i]) continue;
+    if (!VIS[i] || (soAcesos && !aceso(i))) continue;
     const p = proj(i);
     const d = (p.sx-mx)**2 + (p.sy-my)**2;
     if (d > tol2) continue;
